@@ -1,13 +1,12 @@
-from task_loader import load_task
-from config_iterator import gen_arg_list
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from alchemist.task_loader import load_task
+from alchemist.config_iterator import gen_arg_list
+from concurrent.futures import ProcessPoolExecutor
 import subprocess
-from multiprocessing import Lock, Manager
+from multiprocessing import Manager
 import time
-import sys
 import os
-from log import Color, log, log_config
-from typing import NamedTuple, List
+from alchemist.log import log, log_config
+from typing import List
 from argparse import ArgumentParser
 
 arg_lists: List = []

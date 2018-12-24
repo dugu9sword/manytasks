@@ -2,3 +2,7 @@
 
 *logs/*
 test.py
+
+*.egg-info/
+build/
+dist/

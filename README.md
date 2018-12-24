@@ -6,6 +6,10 @@ A toy tool for deep learning, which helps explore different net configurations. 
 - Specify which GPU card to use
 - Specify the number of processes
 
+## Installation
+
+`python setup.py install`
+
 ## Usage
 
 - Configuration
@@ -14,7 +18,7 @@ Configuration of a task is stored in `task_name.json`.
 
 - Running
 
-`python alchemist --task=sample_task.json`
+`alchemist --task=sample_task.json`
 
 - Results
 
