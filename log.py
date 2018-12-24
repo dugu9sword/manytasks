@@ -4,10 +4,10 @@ from colorama import Fore, Back
 __log_path__ = "logs"
 
 
-def log_config(filename, append=False):
-    if not os.path.exists(__log_path__):
-        os.makedirs(__log_path__, exist_ok=True)
-    logger = open("{}/{}.txt".format(__log_path__, filename),
+def log_config(filename, log_path=__log_path__, append=False):
+    if not os.path.exists(log_path):
+        os.makedirs(log_path, exist_ok=True)
+    logger = open("{}/{}.txt".format(log_path, filename),
                   "a" if append else "w")
     globals()["__logger__"] = logger
 
