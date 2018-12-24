@@ -1,6 +1,6 @@
 # Alchemist
 
-A tool for deep learning, which helps explore different net configurations.
+A toy tool for deep learning, which helps explore different net configurations. Note that this tool is still in development.
 
 - Enumerate different configurations
 - Specify which GPU card to use
@@ -8,9 +8,19 @@ A tool for deep learning, which helps explore different net configurations.
 
 ## Usage
 
+- Configuration
+
+Configuration of a task is stored in `task_name.json`.
+
+- Running
+
 `python alchemist --task=sample_task.json`
 
-See `sample_task.json` for more details.
+- Results
+
+Stored in `task_name.json.logs`. `stdout`/`stderr` are redirected to `task-[index].txt`.
+
+## Configuration
 
 ```
 {
