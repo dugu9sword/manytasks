@@ -1,11 +1,13 @@
 import json
 
 
-def load_task(path="task.json"):
+def load_task(path="sample_task.json"):
     task = json.load(fp=open(path))
     executor = task["executor"]
     runnable = task["runnable"]
     cuda = task["cuda"]
+    if cuda == [] or -1:
+        cuda = [-1]
     concurrency = task["concurrency"]
     base_conf = task["configs"]["==base=="]
     more_confs = task["configs"]["==more=="]

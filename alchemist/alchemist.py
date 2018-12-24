@@ -1,18 +1,19 @@
-from task_loader import load_task
-from config_iterator import gen_arg_list
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from alchemist.task_loader import load_task
+from alchemist.config_iterator import gen_arg_list
+from concurrent.futures import ProcessPoolExecutor
 import subprocess
-from multiprocessing import Lock, Manager
+from multiprocessing import Manager
 import time
-import sys
 import os
-from log import Color, log, log_config
-from typing import NamedTuple, List
+from alchemist.log import log, log_config
+from typing import List
+from argparse import ArgumentParser
 
 arg_lists: List = []
 manager = Manager()
 cuda_num = manager.dict()
 cuda_lock = manager.Lock()
+log_path: str
 
 
 def acquire_cuda():
@@ -52,7 +53,7 @@ def run_task(executor, runnable, arg_group):
         len(arg_lists),
         cuda_idx,
         args), target='cf')
-    with open("logs/{}.txt".format(arg_lists.index(arg_group)), 'w') as output:
+    with open("{}/task-{}.txt".format(log_path, arg_lists.index(arg_group)), 'w') as output:
         env = os.environ.copy()
         env["CUDA_VISIBLE_DEVICES"] = str(cuda_idx)
         subprocess.call([executor, runnable, args],
@@ -70,9 +71,29 @@ def run_task(executor, runnable, arg_group):
 
 
 def main():
-    log_config("log")
-    task_path = "task.json"
-    executor, runnable, cuda, concurrency, parsed_confs = load_task("task.json")
+    parser = ArgumentParser()
+    parser.add_argument('--task', dest='task_path', action='store', default="sample_task.json",
+                        help='Specify the task path, e.g. sample_task.json')
+    parser.add_argument('--override', dest='override', action='store', default=False, type=bool,
+                        help='Whether to override existing logs')
+    parsed_args = parser.parse_args()
+    task_path = parsed_args.task_path
+    override = parsed_args.override
+
+    if not os.path.exists(task_path):
+        print("Task {} not found.\n".format(task_path))
+        exit()
+    global log_path
+    log_path = "{}.logs".format(task_path)
+    if os.path.exists(log_path) and not override:
+        print("Existing logs for task {} found, you may \n"
+              "\t   1. rename the task to run\n"
+              "\tor 2. back up the existing logs\n"
+              "\tor 3. set the --override flag\n".format(task_path))
+        exit()
+
+    log_config("alchemist", log_path=log_path)
+    executor, runnable, cuda, concurrency, parsed_confs = load_task(task_path)
     for cuda_id in cuda:
         cuda_num[cuda_id] = 0
 
