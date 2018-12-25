@@ -1,34 +1,17 @@
 {
-  "executor": "python3",
-  "runnable": "sample_task.py",
-  "cuda": -1,
-  "concurrency": 3,
+  "executor": "python",
+  "runnable": "main.py",
+  "cuda": [
+    2,
+    3
+  ],
+  "concurrency": 4,
   "configs": {
     "==base==": {
-      "--seed": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ],
-      "--base1": "bailishouyue",
-      "--base2": "wangzhaojun",
-      "--base3": "luna"
+      "--max_span_length": 10,
+      "--max_sentence_length": 120
     },
     "==more==": [
-      {
-        "--more1": [
-          "wangzherongyao"
-        ]
-      },
-      {
-        "--more2": [
-          "cijizhanchang",
-          "juediqiusheng"
-        ]
-      }
     ]
   }
 }
