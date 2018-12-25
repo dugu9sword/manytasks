@@ -6,3 +6,5 @@ test.py
 *.egg-info/
 build/
 dist/
+
+**/__pycache__/*
