@@ -22,7 +22,7 @@ setup(
     scripts=[],
     entry_points={
         'console_scripts': [
-            'alchemist = alchemist.alchemist:main'
+            'alchemist = alchemist.run_task:main'
         ]
     }
 )

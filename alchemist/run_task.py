@@ -74,7 +74,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('--task', dest='task_path', action='store', default="sample_task.json",
                         help='Specify the task path, e.g. sample_task.json')
-    parser.add_argument('--override', dest='override', action='store', default=False, type=bool,
+    parser.add_argument('--override', dest='override', action='store', default=True, type=bool,
                         help='Whether to override existing logs')
     parsed_args = parser.parse_args()
     task_path = parsed_args.task_path

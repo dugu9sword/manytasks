@@ -1,33 +1,32 @@
 {
-  "executor": "python3",
-  "runnable": "sample_task.py",
-  "cuda": -1,
-  "concurrency": 3,
+  "executor": "python",
+  "runnable": "main.py",
+  "cuda": [
+    2,
+    3
+  ],
+  "concurrency": 6,
   "configs": {
     "==base==": {
-      "--seed": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ],
-      "--base1": "bailishouyue",
-      "--base2": "wangzhaojun",
-      "--base3": "luna"
+      "max_span_length": 10,
+      "max_sentence_length": 120
     },
     "==more==": [
       {
-        "--more1": [
-          "wangzherongyao"
-        ]
+        "--use_tfer": "True",
+        "--tfer_num_layer": [2, 6],
+        "--tfer_num_head": [4, 8],
+        "--tfer_head_dim": 128,
+        "--tfer_token_dim": 256,
+        "--tfer_dropout": 0.1
       },
       {
-        "--more2": [
-          "cijizhanchang",
-          "juediqiusheng"
-        ]
+        "--use_tfer": "False",
+        "--rnn_cell_type": "lstm",
+        "--rnn_num_layer": 2,
+        "--rnn_emb_size": 64,
+        "--rnn_token_dim": [256, 512],
+        "--rnn_dropout": 0.1
       }
     ]
   }

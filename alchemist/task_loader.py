@@ -6,7 +6,7 @@ def load_task(path="sample_task.json"):
     executor = task["executor"]
     runnable = task["runnable"]
     cuda = task["cuda"]
-    if cuda == [] or -1:
+    if cuda == [] or cuda == -1:
         cuda = [-1]
     concurrency = task["concurrency"]
     base_conf = task["configs"]["==base=="]
