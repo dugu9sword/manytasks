@@ -1,10 +1,13 @@
 # Alchemist
 
+> STILL UNSTABLE. DO NOT USE IT. :)
+
 A toy tool for deep learning, which helps explore different net configurations. Note that this tool is still in development.
 
-- Enumerate different configurations
-- Specify which GPU card to use
-- Specify the number of processes
+[+] Enumerate different configurations
+[+] Specify which GPU card to use
+[+] Specify the number of processes
+[-] Add network UI support
 
 ## Installation
 
