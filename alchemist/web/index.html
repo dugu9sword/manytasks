@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Alchemist</title>
+    <link rel="stylesheet" href="bootstrap.min.css" crossorigin="anonymous">
+    <script src="bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.staticfile.org/jquery/2.0.0/jquery.min.js" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+            function refresh() {
+                $.get("/task", function (data, status) {
+                    data = JSON.parse(data);
+                    $("#task_name").text(data.task_name);
+                    $("#executor").text(data.executor);
+                    $("#runnable").text(data.runnable);
+                    $("#cuda").text(data.cuda);
+                    $("#concurrency").text(data.concurrency);
+                    console.log(data.runnable)
+                });
+
+                $.get("/status", function (data, status) {
+                    $("#status_list").empty();
+                    data = JSON.parse(data);
+                    finish_num = 0;
+                    total_num = 0;
+                    for (var arg_group in data) {
+                        total_num++;
+                        var to_append = "";
+                        switch (data[arg_group]) {
+                            case "success":
+                                to_append =
+                                    "<li class=\"list-group-item list-group-item-success\">" +
+                                    "<span class=\"label label-success\">success</span>&nbsp;&nbsp;&nbsp;" +
+                                    arg_group +
+                                    "</li>";
+                                finish_num++;
+                                break;
+                            case "pending":
+                                to_append = "<li class=\"list-group-item list-group-item-info\">" +
+                                    "<span class=\"label label-info\">pending</span>&nbsp;&nbsp;&nbsp;" +
+                                    arg_group +
+                                    "</li>";
+                                break;
+                            case "running":
+                                to_append = "<li class=\"list-group-item list-group-item-warning\">" +
+                                    "<span class=\"label label-warning\">running</span>&nbsp;&nbsp;&nbsp;" +
+                                    arg_group +
+                                    "</li>";
+                                break;
+                            case "failed":
+                                to_append = "<li class=\"list-group-item list-group-item-danger\">" +
+                                    "<span class=\"label label-danger\">failed</span>&nbsp;&nbsp;&nbsp;" +
+                                    arg_group +
+                                    "</li>";
+                                finish_num++;
+                                break;
+                        }
+                        $("#status_list").append(to_append)
+                    }
+                    $(".progress-bar").css("width", "" + 100 * finish_num / total_num + "%");
+                });
+                setTimeout(refresh, 3000)
+            }
+            refresh();
+        });
+    </script>
+</head>
+
+<body>
+<h1>
+    Alchemist
+    <small>A toy tool for deep learning, which helps explore different net configurations.</small>
+</h1>
+
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Task Configurations</h3>
+    </div>
+    <div class="panel-body">
+    </div>
+    <table class="table">
+        <tr>
+            <td><b>Task Name</b></td>
+            <td id="task_name" colspan="3">LSTM</td>
+        </tr>
+        <tr>
+            <td><b>Executor</b></td>
+            <td id="executor">executor</td>
+            <td><b>Runnable</b></td>
+            <td id="runnable">runnable</td>
+        </tr>
+        <tr>
+            <td><b>CUDA</b></td>
+            <td id="cuda">-1</td>
+            <td><b>Concurrency</b></td>
+            <td id="concurrency">-1</td>
+        </tr>
+    </table>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Running Status</h3>
+    </div>
+    <div class="panel-body">
+        <ul class="list-group">
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45"
+                     aria-valuemin="0" aria-valuemax="100" style="width: 45%">
+                    <span class="sr-only">45% Complete</span>
+                </div>
+            </div>
+        </ul>
+
+        <ul id="status_list" class="list-group">
+
+            <!--<li class="list-group-item list-group-item-info">-->
+            <!--<span class="label label-info">Running</span>-->
+            <!--python main.py ...-->
+            <!--</li>-->
+            <!--<li class="list-group-item list-group-item-warning">-->
+            <!--<span class="label label-warning">Pending</span>-->
+            <!--python main.py ...-->
+            <!--</li>-->
+            <!--<li class="list-group-item list-group-item-danger">-->
+            <!--<span class="label label-danger">Fail</span>-->
+            <!--python main.py ...-->
+            <!--</li>-->
+        </ul>
+    </div>
+</div>
+
+<!--<div class="panel panel-default">-->
+<!--<div class="panel-heading">-->
+<!--<h3 class="panel-title">Logs</h3>-->
+<!--</div>-->
+<!--<div class="panel-body">-->
+<!--Maybe next version, maybe never.-->
+<!--</div>-->
+<!--</div>-->
+
+</body>
+</html>
