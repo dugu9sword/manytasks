@@ -2,6 +2,7 @@
 
 *logs/*
 test.py
+test/*
 
 *.egg-info/
 build/
