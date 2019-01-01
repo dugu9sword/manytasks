@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Alchemist</title>
-    <link rel="stylesheet" href="bootstrap.min.css" crossorigin="anonymous">
-    <script src="bootstrap.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.staticfile.org/jquery/2.0.0/jquery.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css" crossorigin="anonymous">
+    <script src="js/jquery.min.js" crossorigin="anonymous"></script>
+    <script src="js/bootstrap.min.js" crossorigin="anonymous"></script>
     <script>
         $(document).ready(function () {
             function refresh() {
-                $.get("/task", function (data, status) {
+                $.get(url = "/task", function (data, status) {
                     data = JSON.parse(data);
                     $("#task_name").text(data.task_name);
                     $("#executor").text(data.executor);
@@ -19,11 +19,13 @@
                     console.log(data.runnable)
                 });
 
+
                 $.get("/status", function (data, status) {
-                    $("#status_list").empty();
-                    data = JSON.parse(data);
+                    prefix = "  " + $("#executor").text() + " " + $("#runnable").text() + " ";
                     finish_num = 0;
                     total_num = 0;
+                    $("#status_list").empty();
+                    data = JSON.parse(data);
                     for (var arg_group in data) {
                         total_num++;
                         var to_append = "";
@@ -31,27 +33,31 @@
                             case "success":
                                 to_append =
                                     "<li class=\"list-group-item list-group-item-success\">" +
-                                    "<span class=\"label label-success\">success</span>&nbsp;&nbsp;&nbsp;" +
-                                    arg_group +
+                                    "<span class=\"label label-success\">success</span>" +
+                                    // "<span class=\"badge\">success</span>" +
+                                    prefix + arg_group +
                                     "</li>";
                                 finish_num++;
                                 break;
                             case "pending":
                                 to_append = "<li class=\"list-group-item list-group-item-info\">" +
-                                    "<span class=\"label label-info\">pending</span>&nbsp;&nbsp;&nbsp;" +
-                                    arg_group +
+                                    "<span class=\"label label-info\">pending</span>" +
+                                    // "<span class=\"badge\">pending</span>" +
+                                    prefix + arg_group +
                                     "</li>";
                                 break;
                             case "running":
                                 to_append = "<li class=\"list-group-item list-group-item-warning\">" +
-                                    "<span class=\"label label-warning\">running</span>&nbsp;&nbsp;&nbsp;" +
-                                    arg_group +
+                                    "<span class=\"label label-warning\">running</span>" +
+                                    // "<span class=\"badge\">running</span>" +
+                                    prefix + arg_group +
                                     "</li>";
                                 break;
                             case "failed":
                                 to_append = "<li class=\"list-group-item list-group-item-danger\">" +
-                                    "<span class=\"label label-danger\">failed</span>&nbsp;&nbsp;&nbsp;" +
-                                    arg_group +
+                                    "<span class=\"label label-danger\">failed</span>" +
+                                    // "<span class=\"badge\">failed</span>" +
+                                    prefix + arg_group +
                                     "</li>";
                                 finish_num++;
                                 break;
@@ -59,9 +65,12 @@
                         $("#status_list").append(to_append)
                     }
                     $(".progress-bar").css("width", "" + 100 * finish_num / total_num + "%");
+                    if (finish_num != total_num) {
+                        setTimeout(refresh, 3000)
+                    }
                 });
-                setTimeout(refresh, 3000)
             }
+
             refresh();
         });
     </script>

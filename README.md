@@ -1,17 +1,17 @@
-# Alchemist
+# Alchemist - 炼丹师
 
-> UNSTABLE. DO NOT USE IT. :)
+*2019.1.1, the first version comes!*
 
-> AN HAPPY 2019 COMMIT
+A toy tool for deep learning, which helps explore different net configurations.
 
-A toy tool for deep learning, which helps explore different net configurations. Note that this tool is still in development.
+- [x] Enumerate different configurations
+- [x] Specify which GPU card to use
+- [x] Specify the number of processes
+- [x] Web UI support
 
-- Enumerate different configurations
-- Specify which GPU card to use
-- Specify the number of processes
-- Add network UI support
+## Clone & Install
 
-## Installation
+`git clone https://github.com/dugu9sword/alchemist.git`
 
 `python setup.py install`
 
@@ -19,17 +19,25 @@ A toy tool for deep learning, which helps explore different net configurations. 
 
 - Configuration
 
-Configuration of a task is stored in `task_name.json`.
+A sample task configuration is stored in `sample_task.json`.
 
 - Running
 
 `alchemist --task=sample_task.json`
 
+You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line)
+
+![sample](sample.png)
+
 - Results
 
-Stored in `task_name.json.logs`. `stdout`/`stderr` are redirected to `task-[index].txt`.
+All running logs are stored in `sample_task.json.logs`. 
 
-## Configuration
+The running log of the alchemist is written into `alchemist.log` 
+
+The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirected to `task-[index].txt`.
+
+## Sample Configuration
 
 ```
 {

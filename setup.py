@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="alchemist",
-    version="0.1",
+    version="20190101",
     keywords=["alchemist", ],
     description="eds sdk",
     long_description="A toy tool for deep learning, which helps explore different net configurations.",
@@ -16,8 +16,10 @@ setup(
     include_package_data=True,
     platforms="any",
     install_requires=[
-        "colorama"
+        "colorama",
+        "flask"
     ],
+    zip_safe=False,
 
     scripts=[],
     entry_points={

@@ -1,18 +1,36 @@
 from alchemist import glob
-from flask import Flask, url_for, send_file
+from flask import Flask, url_for, send_file, send_from_directory
 import json
+import socket
+import logging
+
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
+
+def available_port():
+    for port in range(5000, 5010):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect(("127.0.0.1", port))
+            # s.shutdown(2)
+            # print(port)
+        except:
+            return port
+    raise Exception("No port available")
+
 
 app = Flask(__name__, static_folder='web', static_url_path='/web')
 
 
-@app.route("/bootstrap.min.css")
-def bst_css():
-    return send_file('web/bootstrap.min.css')
+@app.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory('web/js', path)
 
 
-@app.route("/bootstrap.min.js")
-def bst_js():
-    return send_file('web/bootstrap.min.js')
+@app.route('/css/<path:path>')
+def send_css(path):
+    return send_from_directory('web/css', path)
 
 
 @app.route("/")
