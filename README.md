@@ -1,15 +1,16 @@
 # Alchemist
 
-> UNSTABLE. DO NOT USE IT. :)
-
+> UNSTABLE YET.
 > AN HAPPY 2019 COMMIT
+> DO NOT USE IT. :)
+
 
 A toy tool for deep learning, which helps explore different net configurations. Note that this tool is still in development.
 
-- Enumerate different configurations
-- Specify which GPU card to use
-- Specify the number of processes
-- Add network UI support
+- [x] Enumerate different configurations
+- [x] Specify which GPU card to use
+- [x] Specify the number of processes
+- [x] Web UI support
 
 ## Installation
 
@@ -24,6 +25,10 @@ Configuration of a task is stored in `task_name.json`.
 - Running
 
 `alchemist --task=sample_task.json`
+
+You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line)
+
+![sample](sample.png)
 
 - Results
 

@@ -12,7 +12,7 @@ import json
 from flask import Flask, url_for, send_file
 from alchemist import glob
 from alchemist.glob import ArgGroupList, ArgGroup, Arg
-from alchemist.webui import app
+from alchemist.webui import app, available_port
 
 """
 LOGGING
@@ -191,20 +191,20 @@ def run_task(executor, runnable, arg_group):
         for arg in arg_group:
             callee.append("{}={}".format(arg.key, arg.value))
         glob.arg_group_status[task_idx] = "running"
-        subprocess.call(callee,
-                        stdout=output,
-                        stderr=output,
-                        env=env)
-        log("[{}] {} TASK {}/{} ON CUDA {} : {}".format(
+        ret = subprocess.call(callee,
+                              stdout=output,
+                              stderr=output,
+                              env=env)
+        log("[{}] {} TASK {}/{} ON CUDA {} WITH RETURN ID {} : {}".format(
             current_time(),
             "FINISH",
             glob.arg_group_list.index(arg_group),
             len(glob.arg_group_list),
             cuda_idx,
+            ret,
             args_str), target='cf')
         release_cuda(cuda_idx)
-        glob.arg_group_status[task_idx] = "success"
-        print(glob.arg_group_status)
+        return ret
 
 
 def main():
@@ -251,20 +251,30 @@ def main():
         log("\t{} : {}".format(idx, arg2str(arg_group)), target='cf')
 
     # Start UI
-    Thread(target=app.run).start()
+    port = available_port()
+    ui_thread = Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": port})
+    ui_thread.daemon = True
+    ui_thread.start()
+    log("You can view the running status through http://127.0.0.1:{}".format(port), target="cf")
 
     with ProcessPoolExecutor(max_workers=glob.concurrency) as pool:
         futures = []
         for arg_group in glob.arg_group_list:
             futures.append(pool.submit(run_task, glob.executor, glob.runnable, arg_group))
         while True:
+            done_num = 0
             for task_id, future in enumerate(futures):
                 if future.running():
                     glob.arg_group_status[task_id] = "running"
-                # print("check done")
                 if future.done():
-                    # print(future.done())
-                    glob.arg_group_status[task_id] = "success"
+                    if future.result() == 0:
+                        glob.arg_group_status[task_id] = "success"
+                    else:
+                        glob.arg_group_status[task_id] = "failed"
+                    done_num += 1
+            time.sleep(5)
+            if done_num == len(futures):
+                break
 
 
 if __name__ == '__main__':

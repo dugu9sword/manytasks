@@ -24,6 +24,9 @@ config = parser.parse_args(namespace=nsp)  # type: ProgramArgs
 print("arg a is {}, b is {}".format(config.a, config.b))
 print("cuda device is {}".format(os.environ["CUDA_VISIBLE_DEVICES"]))
 
-sec = random.randint(5, 20)
+sec = random.randint(10, 20)
+if 15 < sec < 20:
+    print("Exception")
+    raise Exception("ERROR")
 print("sleep for {} seconds".format(sec))
 time.sleep(sec)
