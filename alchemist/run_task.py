@@ -12,7 +12,7 @@ import json
 from flask import Flask, url_for, send_file
 from alchemist import glob
 from alchemist.glob import ArgGroupList, ArgGroup, Arg
-from alchemist.webui import app, available_port
+from alchemist.webui import app, available_port, init_gpu_handles
 
 """
 LOGGING
@@ -251,6 +251,7 @@ def main():
         log("\t{} : {}".format(idx, arg2str(arg_group)), target='cf')
 
     # Start UI
+    init_gpu_handles()
     port = available_port()
     ui_thread = Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": port})
     ui_thread.daemon = True

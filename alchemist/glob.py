@@ -13,7 +13,7 @@ log_path = "<path>"
 
 executor = "<python>"
 runnable = "<main.py>"
-cuda = [-1]
+cuda = [0, 1, 2]
 concurrency = -1
 
 manager = Manager()
