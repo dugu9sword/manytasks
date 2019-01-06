@@ -1,2 +1,4 @@
 colorama
 flask
+nvidia-ml-py3
+tailer

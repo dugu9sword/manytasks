@@ -8,6 +8,8 @@ A toy tool for deep learning, which helps explore different net configurations.
 - [x] Specify which GPU card to use
 - [x] Specify the number of processes
 - [x] Web UI support
+- [x] Show the last 100 lines of logs
+- [x] Show the GPU overload
 
 ## Clone & Install
 
@@ -31,7 +33,7 @@ You can view the running status via "http://127.0.0.1:5000" (**the port number m
 
 - Results
 
-All running logs are stored in `sample_task.json.logs`. 
+All running logs are stored in `sample_task.json.logs`. You can click the item in the list to view the last 100 lines of the log.
 
 The running log of the alchemist is written into `alchemist.log` 
 
