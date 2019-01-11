@@ -17,7 +17,9 @@ setup(
     platforms="any",
     install_requires=[
         "colorama",
-        "flask"
+        "flask",
+        "nvidia-ml-py3",
+        "tailer"
     ],
     zip_safe=False,
 
