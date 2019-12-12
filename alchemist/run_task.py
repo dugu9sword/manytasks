@@ -8,19 +8,17 @@ import os
 from typing import List
 from threading import Thread
 from argparse import ArgumentParser
-import json
+import hjson
 from flask import Flask, url_for, send_file
 from alchemist import glob
 from alchemist.glob import ArgGroupList, ArgGroup, Arg
 from alchemist.webui import app, available_port, init_gpu_handles
-
-"""
-LOGGING
-"""
-__log_path__ = "logs"
+import re
+from tabulate import tabulate
 
 
-def log(*info, target='c'):
+
+def log(*info, target='cf'):
     assert target in ['c', 'f', 'cf', 'fc']
     info_str = str("\n".join(info))
     if 'c' in target:
@@ -30,39 +28,6 @@ def log(*info, target='c'):
         logger.write("{}\n".format(info_str))
         logger.flush()
 
-
-class Color(object):
-    @staticmethod
-    def red(s):
-        return Fore.RED + str(s) + Fore.RESET
-
-    @staticmethod
-    def green(s):
-        return Fore.GREEN + str(s) + Fore.RESET
-
-    @staticmethod
-    def yellow(s):
-        return Fore.YELLOW + str(s) + Fore.RESET
-
-    @staticmethod
-    def blue(s):
-        return Fore.BLUE + str(s) + Fore.RESET
-
-    @staticmethod
-    def magenta(s):
-        return Fore.MAGENTA + str(s) + Fore.RESET
-
-    @staticmethod
-    def cyan(s):
-        return Fore.CYAN + str(s) + Fore.RESET
-
-    @staticmethod
-    def white(s):
-        return Fore.WHITE + str(s) + Fore.RESET
-
-    @staticmethod
-    def white_green(s):
-        return Fore.WHITE + Back.GREEN + str(s) + Fore.RESET + Back.RESET
 
 
 def next_config_idx(configs, config_idx):
@@ -100,7 +65,7 @@ def gen_arg_list(configs):
     return arg_group_list
 
 
-def log_config(filename, log_path=__log_path__, append=False):
+def log_config(filename, log_path, append=False):
     if not os.path.exists(log_path):
         os.makedirs(log_path, exist_ok=True)
     logger = open("{}/{}.txt".format(log_path, filename),
@@ -108,8 +73,8 @@ def log_config(filename, log_path=__log_path__, append=False):
     globals()["__logger__"] = logger
 
 
-def load_task(path="sample_task.json"):
-    task = json.load(fp=open(path))
+def load_task(path="sample_task.hjson"):
+    task = hjson.load(fp=open(path))
     executor = task["executor"]
     runnable = task["runnable"]
     cuda = task["cuda"]
@@ -177,16 +142,17 @@ def run_task(executor, runnable, arg_group):
     task_idx = glob.arg_group_list.index(arg_group)
     cuda_idx = acquire_cuda()
     args_str = arg2str(arg_group)
-    log("[{}] {} TASK {}/{} ON CUDA {} : {}".format(
+    log("[{}] {} TASK {}/{} {} : {}".format(
         current_time(),
         "START",
         glob.arg_group_list.index(arg_group),
         len(glob.arg_group_list),
-        cuda_idx,
-        args_str), target='cf')
+        "(ON CUDA {})".format(cuda_idx) if cuda_idx != -1 else "",
+        args_str))
     with open("{}/task-{}.txt".format(glob.log_path, glob.arg_group_list.index(arg_group)), 'w') as output:
         env = os.environ.copy()
-        env["CUDA_VISIBLE_DEVICES"] = str(cuda_idx)
+        if cuda_idx != -1:
+            env["CUDA_VISIBLE_DEVICES"] = str(cuda_idx)
         callee = [executor, runnable]
         for arg in arg_group:
             callee.append("{}={}".format(arg.key, arg.value))
@@ -195,60 +161,73 @@ def run_task(executor, runnable, arg_group):
                               stdout=output,
                               stderr=output,
                               env=env)
-        log("[{}] {} TASK {}/{} ON CUDA {} WITH RETURN ID {} : {}".format(
+        log("[{}] {} TASK {}/{} {} WITH RETURN ID {} : {}".format(
             current_time(),
             "FINISH",
             glob.arg_group_list.index(arg_group),
             len(glob.arg_group_list),
-            cuda_idx,
+            "(ON CUDA {})".format(cuda_idx) if cuda_idx != -1 else "",
             ret,
-            args_str), target='cf')
+            args_str))
         release_cuda(cuda_idx)
         return ret
 
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('--task', dest='task_path', action='store', default="sample_task.json",
-                        help='Specify the task path, e.g. task.json')
-    parser.add_argument('--override', dest='override', action='store', default=True, type=bool,
-                        help='Whether to override existing logs')
+    parser.add_argument('--task', dest='task_path', action='store', default="sample_task",
+                        help='Specify the task name')
     parsed_args = parser.parse_args()
     task_path = parsed_args.task_path
+    if ".hjson" not in task_path:
+        task_path += '.hjson'
     glob.task_name = task_path
-    override = parsed_args.override
 
     if not os.path.exists(task_path):
-        print("Task {} not found.\n".format(task_path))
+        print("Task {} not found.".format(task_path))
         exit()
-    glob.log_path = "{}.logs".format(task_path)
-    if os.path.exists(glob.log_path) and not override:
-        print("Existing logs for task {} found, you may \n"
-              "\t   1. rename the task to run\n"
-              "\tor 2. back up the existing logs\n"
-              "\tor 3. set the --override flag\n".format(task_path))
-        exit()
+    glob.log_path = "{}.logs".format(task_path[:-6])
+
+    if os.path.exists(glob.log_path):
+        override = input("Logs for task {} exists, input [y] to override: ".format(task_path))
+        if override != 'y':
+            print("Task canceled.")
+            exit()
 
     log_config("alchemist", log_path=glob.log_path)
     glob.executor, glob.runnable, glob.cuda, glob.concurrency, parsed_confs = load_task(task_path)
     for cuda_id in glob.cuda:
         cuda_num[cuda_id] = 0
 
+    log("""
+    =================================================================
+                 _          _                          _         _   
+         /\     | |        | |                        (_)       | |  
+        /  \    | |   ___  | |__     ___   _ __ ___    _   ___  | |_ 
+       / /\ \   | |  / __| | '_ \   / _ \ | '_ ` _ \  | | / __| | __|
+      / ____ \  | | | (__  | | | | |  __/ | | | | | | | | \__ \ | |_ 
+     /_/    \_\ |_|  \___| |_| |_|  \___| |_| |_| |_| |_| |___/  \__|
+    =================================================================
+    """)
+
     log("Load task from {}".format(task_path),
         "- executor: {}".format(glob.executor),
         "- runnable: {}".format(glob.runnable),
         "- cuda: {}".format(str(glob.cuda)),
-        "- concurrency: {}".format(glob.concurrency),
-        target='cf')
+        "- concurrency: {}".format(glob.concurrency))
 
     for config in parsed_confs:
-        print(gen_arg_list(config))
+        # print(gen_arg_list(config))
         glob.arg_group_list.extend(gen_arg_list(config))
     glob.arg_group_status = ["pending"] * len(glob.arg_group_list)
 
-    log("Mappings(idx->args)", target='cf')
+    log("Mappings(idx->args)")
+    header = ['idx'] + [ele.key for ele in glob.arg_group_list[0]]
+    table = [header]
     for idx, arg_group in enumerate(glob.arg_group_list):
-        log("\t{} : {}".format(idx, arg2str(arg_group)), target='cf')
+        # log("\t{} : {}".format(idx, arg2str(arg_group)), target='cf')
+        table.append([idx] + [ele.value for ele in arg_group])
+    log(tabulate(table))
 
     # Start UI
     init_gpu_handles()
@@ -256,7 +235,7 @@ def main():
     ui_thread = Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": port})
     ui_thread.daemon = True
     ui_thread.start()
-    log("You can view the running status through http://127.0.0.1:{}".format(port), target="cf")
+    log("You can view the running status through http://127.0.0.1:{}".format(port))
 
     with ProcessPoolExecutor(max_workers=glob.concurrency) as pool:
         futures = []

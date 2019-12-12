@@ -1,8 +1,17 @@
-# Alchemist - 炼丹师
+# Alchemist
 
-*2019.1.1, the first version comes!*
 
 A toy tool for deep learning, which helps explore different net configurations.
+
+> 2019.12.11
+> About one year later, after submitting my ACL 2020 paper, I add some new features to the tool. Good luck~
+
+- [x] Use *.hjson instead of *.json for configuration, since *.hjson is more human-readable which allows comments and missing/trailing commas
+- [x] Ask the user for overriding existing logs
+- [x] Beautify the CLI tools
+
+> 2019.1.1
+> First version comes out. I wrote the code to enable grid search for my ACL 2019 submission. Unfortunately it was rejected. :(
 
 - [x] Enumerate different configurations
 - [x] Specify which GPU card to use
@@ -21,11 +30,11 @@ A toy tool for deep learning, which helps explore different net configurations.
 
 - Configuration
 
-A sample task configuration is stored in `sample_task.json`.
+A sample task configuration is stored in `sample_task.hjson`.
 
 - Running
 
-`alchemist --task=sample_task.json`
+`alchemist --task=sample_task`
 
 You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line)
 
@@ -33,9 +42,9 @@ You can view the running status via "http://127.0.0.1:5000" (**the port number m
 
 - Results
 
-All running logs are stored in `sample_task.json.logs`. You can click the item in the list to view the last 100 lines of the log.
+All running logs are stored in `sample_task.logs`. You can click the item in the list to view the last 100 lines of the log.
 
-The running log of the alchemist is written into `alchemist.log` 
+The running log of the alchemist is written into `alchemist.txt` 
 
 The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirected to `task-[index].txt`.
 
