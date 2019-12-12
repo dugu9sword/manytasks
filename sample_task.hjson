@@ -1,0 +1,32 @@
+{
+  // The python interceptor
+  "executor": "python",
+  // The runnable file
+  "runnable": "sample_task.py",
+  // When cuda is set to -1/[]/[-1], alchemist will not set 
+  // the environment variables CUDA_VISIBLE_DEVICES. 
+  "cuda": [-1],
+  // How many processes will be run in parallel?
+  "concurrency": 2,
+  "configs": {
+    "==base==": {
+      // You can pass a list, split by a comma "," or not.
+      "--a": [
+        111
+        222
+        133
+      ],
+      // Or just a string/number
+      "--b": 111,
+      "--c": "123"
+    },
+    "==more==": [
+      {
+        "--d": [1, 2]
+      }
+      {
+        "--e": [2]
+      }
+    ]
+  }
+}
