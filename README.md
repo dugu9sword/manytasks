@@ -4,13 +4,15 @@
 A toy tool for deep learning, which helps explore different net configurations.
 
 > 2019.12.11
+>
 > About one year later, after submitting my ACL 2020 paper, I add some new features to the tool. Good luck~
 
-- [x] Use *.hjson instead of *.json for configuration, since *.hjson is more human-readable which allows comments and missing/trailing commas
+- [x] Use `.hjson` (<https://hjson.org/>) instead of `.json` for configuration, since `.hjson` is more human-readable which allows comments and missing/trailing commas
 - [x] Ask the user for overriding existing logs
 - [x] Beautify the CLI tools
 
 > 2019.1.1
+>
 > First version comes out. I wrote the code to enable grid search for my ACL 2019 submission. Unfortunately it was rejected. :(
 
 - [x] Enumerate different configurations
