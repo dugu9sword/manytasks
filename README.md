@@ -24,9 +24,15 @@ A toy tool for deep learning, which helps explore different net configurations.
 
 ## Clone & Install
 
+The simplest way to install the package is:
+
+`pip install git+https://github.com/dugu9sword/alchemist.git`
+
+Or you can download the source code and install manually:
+
 `git clone https://github.com/dugu9sword/alchemist.git`
 
-`python setup.py install`
+`python setup.py install` (If a permission error occurs, you can pass a `-u` flag.)
 
 ## Usage
 
