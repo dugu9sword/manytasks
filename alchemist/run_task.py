@@ -15,6 +15,7 @@ from alchemist.glob import ArgGroupList, ArgGroup, Arg
 from alchemist.webui import app, available_port, init_gpu_handles
 import re
 from tabulate import tabulate
+from time import sleep
 
 
 
@@ -240,6 +241,9 @@ def main():
     with ProcessPoolExecutor(max_workers=glob.concurrency) as pool:
         futures = []
         for arg_group in glob.arg_group_list:
+            # In some cases, not all tasks are fired.
+            # Do not know why, but sleep(1) will work.
+            sleep(1)
             futures.append(pool.submit(run_task, glob.executor, glob.runnable, arg_group))
         while True:
             done_num = 0
