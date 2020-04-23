@@ -16,7 +16,8 @@ from alchemist.webui import app, available_port, init_gpu_handles
 import re
 from tabulate import tabulate
 from time import sleep
-
+from pathlib import Path
+import random
 
 
 def log(*info, target='cf'):
@@ -178,8 +179,11 @@ def main():
     parser = ArgumentParser()
     parser.add_argument('--task', dest='task_path', action='store', default="sample_task",
                         help='Specify the task name')
+    parser.add_argument('--random', dest='random_exe', action='store_true',
+                        help='Specify the task name')
     parsed_args = parser.parse_args()
     task_path = parsed_args.task_path
+    random_exe = parsed_args.random_exe
     if ".hjson" not in task_path:
         task_path += '.hjson'
     glob.task_name = task_path
@@ -194,6 +198,8 @@ def main():
         if override != 'y':
             print("Task canceled.")
             exit()
+    for p in Path(glob.log_path).glob("task-*.txt"):
+        p.unlink()
 
     log_config("alchemist", log_path=glob.log_path)
     glob.executor, glob.runnable, glob.cuda, glob.concurrency, parsed_confs = load_task(task_path)
@@ -221,13 +227,30 @@ def main():
         # print(gen_arg_list(config))
         glob.arg_group_list.extend(gen_arg_list(config))
     glob.arg_group_status = ["pending"] * len(glob.arg_group_list)
+    if random_exe:
+        random.shuffle(glob.arg_group_list)
 
     log("Mappings(idx->args)")
-    header = ['idx'] + [ele.key for ele in glob.arg_group_list[0]]
+    keys = []
+    for arg_group in glob.arg_group_list:
+        for ele in arg_group:
+            if ele.key not in keys:
+                keys.append(ele.key)
+    header = ['idx'] + keys
     table = [header]
     for idx, arg_group in enumerate(glob.arg_group_list):
         # log("\t{} : {}".format(idx, arg2str(arg_group)), target='cf')
-        table.append([idx] + [ele.value for ele in arg_group])
+        values = []
+        for key in keys:
+            found = False
+            for ele in arg_group:
+                if ele.key == key:
+                    found = True
+                    values.append(ele.value)
+                    break
+            if not found:
+                values.append("-")
+        table.append([idx] + values)
     log(tabulate(table))
 
     # Start UI
