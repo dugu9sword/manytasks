@@ -3,7 +3,7 @@
   "executor": "python",
   // The runnable file
   "runnable": "sample_task.py",
-  // When cuda is set to -1/[]/[-1], alchemist will not set 
+  // When cuda is set to -1/[]/[-1], ManyTasks will not set 
   // the environment variables CUDA_VISIBLE_DEVICES. 
   "cuda": [-1],
   // How many processes will be run in parallel?
@@ -14,18 +14,16 @@
       "--a": [
         111
         222
-        133
       ],
-      // Or just a string/number
-      "--b": 111,
-      "--c": "123"
+      // You can even pass a python script which returns an iterable
+      "--b": "{range(2)}",
     },
     "==more==": [
       {
-        "--d": [1, 2]
+        "--c": [1, 2]
       }
       {
-        "--e": [2]
+        "--c": [4]
       }
     ]
   }

@@ -2,10 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Alchemist</title>
+    <title>ManyTasks</title>
     <link rel="stylesheet" href="css/bootstrap.min.css" crossorigin="anonymous">
     <script src="js/jquery.min.js" crossorigin="anonymous"></script>
     <script src="js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <style type="text/css">
+        .list-group-item-success:hover {
+            cursor: pointer;
+        }
+        .list-group-item-warning:hover {
+            cursor: pointer;
+        }
+        .list-group-item-danger:hover {
+            cursor: pointer;
+        }
+    </style>
     <script>
         $(document).ready(function () {
             function refresh() {
@@ -125,21 +136,21 @@
 
 <body>
 <h1>
-    Alchemist
-    <small>A toy tool for deep learning, which helps explore different net configurations.</small>
+    ManyTasks
+    <small>A tool for deploying many tasks automatically</small>
 </h1>
 
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">Task Configurations</h3>
+        <h3 class="panel-title">Configurations</h3>
     </div>
     <div class="panel-body">
     </div>
     <table class="table">
         <tr>
-            <td><b>Task Name</b></td>
-            <td id="task_name">LSTM</td>
+            <td><b>Config Name</b></td>
+            <td id="config">LSTM</td>
             <td><b>Executor</b></td>
             <td id="executor">executor</td>
             <td><b>Runnable</b></td>

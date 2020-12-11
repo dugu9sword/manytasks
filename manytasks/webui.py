@@ -1,4 +1,4 @@
-from alchemist import glob
+from manytasks import shared
 from flask import Flask, url_for, send_file, send_from_directory
 import json
 import socket
@@ -6,6 +6,10 @@ import logging
 import os
 from tailer import tail
 import pynvml
+import sys
+
+# cli = sys.modules['flask.cli']
+# cli.show_server_banner = lambda *x: None
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -15,9 +19,9 @@ def init_gpu_handles():
     gpu_handles = {}
     try:
         pynvml.nvmlInit()
-        for cid in glob.cuda:
+        for cid in shared.cuda:
             gpu_handles[cid] = pynvml.nvmlDeviceGetHandleByIndex(cid)
-    except:
+    except Exception:
         pass
     globals()["gpu_handles"] = gpu_handles
 
@@ -29,7 +33,7 @@ def available_port():
             s.connect(("127.0.0.1", port))
             # s.shutdown(2)
             # print(port)
-        except:
+        except Exception:
             return port
     raise Exception("No port available")
 
@@ -72,7 +76,7 @@ def index():
 
 @app.route("/log-<int:task_id>-tail-<int:tail_num>")
 def fetch_log(task_id, tail_num):
-    log_path = "{}/task-{}.txt".format(glob.log_path, task_id)
+    log_path = "{}/task-{}.txt".format(shared.log_path, task_id)
     if os.path.exists(log_path):
         return "\n".join(tail(open(log_path), tail_num))
     else:
@@ -80,24 +84,20 @@ def fetch_log(task_id, tail_num):
 
 @app.route("/task")
 def task():
-    return json.dumps({"task_name": glob.task_name,
-                       "executor": glob.executor,
-                       "runnable": glob.runnable,
-                       "cuda": glob.cuda,
-                       "concurrency": glob.concurrency})
-
-
-def arg2str(arg_group):
-    return "\n".join(list(map(lambda arg: "{}={}".format(arg.key, arg.value), arg_group)))
+    return json.dumps({"task_name": shared.task_name,
+                       "executor": shared.executor,
+                       "runnable": shared.runnable,
+                       "cuda": shared.cuda,
+                       "concurrency": shared.concurrency})
 
 
 @app.route("/status")
 def status():
     ret = {}
-    for i, arg_group in enumerate(glob.arg_group_list):
+    for i, task in enumerate(shared.tasks):
         ret[i] = {
-            "args": arg2str(arg_group),
-            "status": glob.arg_group_status[i]
+            "args": shared.task2str(task),
+            "status": shared.task_status[i]
         }
     return json.dumps(ret)
 
