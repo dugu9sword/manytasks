@@ -5,7 +5,7 @@ setup(
     version="1.0",
     keywords=["manytasks", ],
     description="eds sdk",
-    long_description="A toy tool for deep learning, which helps explore different net configurations.",
+    long_description="A tool for deploying many tasks automatically.",
     license="WTFPL Licence",
 
     url="https://github.com/dugu9sword/manytasks",

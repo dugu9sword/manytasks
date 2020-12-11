@@ -6,6 +6,10 @@ A tool for deploying many tasks automatically.
 
 The simplest way to install the package is:
 
+`pip install manytasks`
+
+or you can install from github to get the newest features:
+
 `pip install git+https://github.com/dugu9sword/manytasks.git`
 
 
@@ -35,7 +39,7 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
 
 ```
 {
-  "executor": "python3",   # python interpreter
+  "executor": "python",   # python interpreter
   "runnable": "some.py",   # the runnable file
   "cuda": [0, 1],          # [-1 if not using cuda] cuda index to use
   "concurrency": 2,        # number of multi-processes 
