@@ -10,14 +10,15 @@ from threading import Thread
 from argparse import ArgumentParser
 import hjson
 from flask import Flask, url_for, send_file
-from alchemist import glob
-from alchemist.glob import ArgGroupList, ArgGroup, Arg
-from alchemist.webui import app, available_port, init_gpu_handles
+from manytasks import glob
+from manytasks.glob import ArgGroupList, ArgGroup, Arg
+from manytasks.webui import app, available_port, init_gpu_handles
 import re
 from tabulate import tabulate
 from time import sleep
 from pathlib import Path
 import random
+from manytasks.color import Color
 
 
 def log(*info, target='cf'):
@@ -146,7 +147,7 @@ def run_task(executor, runnable, arg_group):
     args_str = arg2str(arg_group)
     log("[{}] {} TASK {}/{} {} : {}".format(
         current_time(),
-        "START",
+        Color.magenta("START"),
         glob.arg_group_list.index(arg_group),
         len(glob.arg_group_list),
         "(ON CUDA {})".format(cuda_idx) if cuda_idx != -1 else "",
@@ -163,14 +164,16 @@ def run_task(executor, runnable, arg_group):
                               stdout=output,
                               stderr=output,
                               env=env)
-        log("[{}] {} TASK {}/{} {} WITH RETURN ID {} : {}".format(
+        log_info = "[{}] {} TASK {}/{} {} WITH RETURN ID {} : {}".format(
             current_time(),
-            "FINISH",
+            "FINISH", 
             glob.arg_group_list.index(arg_group),
             len(glob.arg_group_list),
             "(ON CUDA {})".format(cuda_idx) if cuda_idx != -1 else "",
             ret,
-            args_str))
+            args_str)
+        log(Color.green(log_info) if ret == 0 else Color.red(log_info))
+        # log(log_info)
         release_cuda(cuda_idx)
         return ret
 
@@ -181,6 +184,8 @@ def main():
                         help='Specify the task name')
     parser.add_argument('--random', dest='random_exe', action='store_true',
                         help='Specify the task name')
+    parser.add_argument('--ui', dest='ui', action="store_true", 
+                        help="Whether to start a web interface showing the status")
     parsed_args = parser.parse_args()
     task_path = parsed_args.task_path
     random_exe = parsed_args.random_exe
@@ -201,27 +206,30 @@ def main():
     for p in Path(glob.log_path).glob("task-*.txt"):
         p.unlink()
 
-    log_config("alchemist", log_path=glob.log_path)
+    log_config("manytasks", log_path=glob.log_path)
     glob.executor, glob.runnable, glob.cuda, glob.concurrency, parsed_confs = load_task(task_path)
     for cuda_id in glob.cuda:
         cuda_num[cuda_id] = 0
 
     log("""
     =================================================================
-                 _          _                          _         _   
-         /\     | |        | |                        (_)       | |  
-        /  \    | |   ___  | |__     ___   _ __ ___    _   ___  | |_ 
-       / /\ \   | |  / __| | '_ \   / _ \ | '_ ` _ \  | | / __| | __|
-      / ____ \  | | | (__  | | | | |  __/ | | | | | | | | \__ \ | |_ 
-     /_/    \_\ |_|  \___| |_| |_|  \___| |_| |_| |_| |_| |___/  \__|
+                                      _____              _         
+          /\/\    __ _  _ __   _   _ /__   \  __ _  ___ | | __ ___ 
+         /    \  / _` || '_ \ | | | |  / /\/ / _` |/ __|| |/ // __| 
+        / /\/\ \| (_| || | | || |_| | / /   | (_| |\__ \|   < \__ \ 
+        \/    \/ \__,_||_| |_| \__, | \/     \__,_||___/|_|\_\|___/ 
+                               |___/                               
     =================================================================
     """)
 
-    log("Load task from {}".format(task_path),
-        "- executor: {}".format(glob.executor),
-        "- runnable: {}".format(glob.runnable),
-        "- cuda: {}".format(str(glob.cuda)),
-        "- concurrency: {}".format(glob.concurrency))
+    # exit()
+
+    # log("Load task from {}".format(task_path),
+    #     "- executor: {}".format(glob.executor),
+    #     "- runnable: {}".format(glob.runnable),
+    #     "- cuda: {}".format(str(glob.cuda)),
+    #     "- concurrency: {}".format(glob.concurrency),
+    #     "\n")
 
     for config in parsed_confs:
         # print(gen_arg_list(config))
@@ -230,13 +238,15 @@ def main():
     if random_exe:
         random.shuffle(glob.arg_group_list)
 
-    log("Mappings(idx->args)")
+    log(">>>>>> Generate task list...")
     keys = []
     for arg_group in glob.arg_group_list:
         for ele in arg_group:
             if ele.key not in keys:
                 keys.append(ele.key)
+    
     header = ['idx'] + keys
+    # header = list(map(Color.cyan, header))
     table = [header]
     for idx, arg_group in enumerate(glob.arg_group_list):
         # log("\t{} : {}".format(idx, arg2str(arg_group)), target='cf')
@@ -252,15 +262,22 @@ def main():
                 values.append("-")
         table.append([idx] + values)
     log(tabulate(table))
+    log()
 
     # Start UI
-    init_gpu_handles()
-    port = available_port()
-    ui_thread = Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": port})
-    ui_thread.daemon = True
-    ui_thread.start()
-    log("You can view the running status through http://127.0.0.1:{}".format(port))
-
+    if parsed_args.ui:
+        log(">>>>>> Start web UI...")
+        init_gpu_handles()
+        port = available_port()
+        ui_thread = Thread(target=app.run, kwargs={"host": "0.0.0.0", "port": port})
+        ui_thread.daemon = True
+        ui_thread.start()
+        ui_url = Color.cyan("http://<YOUR IP ADDRESS>:{}".format(port))
+        log("You can view the running status through {}. ".format(ui_url),
+            "Please make sure the port {} is open and not banned by the firewall!".format(port))
+        log()
+        
+    log(">>>>>> Start execution...")
     with ProcessPoolExecutor(max_workers=glob.concurrency) as pool:
         futures = []
         for arg_group in glob.arg_group_list:

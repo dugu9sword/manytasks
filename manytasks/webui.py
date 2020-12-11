@@ -1,4 +1,4 @@
-from alchemist import glob
+from manytasks import glob
 from flask import Flask, url_for, send_file, send_from_directory
 import json
 import socket
@@ -6,6 +6,12 @@ import logging
 import os
 from tailer import tail
 import pynvml
+
+
+import sys
+
+cli = sys.modules['flask.cli']
+cli.show_server_banner = lambda *x: None
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
