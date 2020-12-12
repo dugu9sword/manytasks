@@ -64,8 +64,8 @@ def load_config(path="sample_config.hjson"):
     if cuda == [] or cuda == -1:
         cuda = [-1]
     concurrency = config["concurrency"]
-    base_conf = parse_config(config["config"]["==base=="])
-    more_confs = list(map(parse_config, config["config"]["==more=="]))
+    base_conf = parse_config(config["configs"]["==base=="])
+    more_confs = list(map(parse_config, config["configs"]["==more=="]))
 
     tasks = []
     if len(more_confs) == 0:
