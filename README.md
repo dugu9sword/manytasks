@@ -2,7 +2,7 @@
 
 A tool for deploying many tasks automatically.
 
-## Clone & Install
+## Installation
 
 The simplest way to install the package is:
 
@@ -17,23 +17,25 @@ or you can install from github to get the newest features:
 
 - Configuration
 
-A sample task configuration is stored in `sample_task.hjson`.
+A sample ManyTasks configuration is stored in `sample_config.hjson`.
 
 - Running
 
-`manytasks --task=sample_task`
+You can run many tasks by `manytasks sample_config`.
 
-You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line)
+- Enable Web UI
+
+You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line) by running: `manytasks sample_config --ui`
 
 ![sample](sample.png)
 
 - Results
 
-All running logs are stored in `sample_task.logs`. You can click the item in the list to view the last 100 lines of the log.
+All running logs are stored in `sample_config.logs`. You can click the item in the list to view the last 100 lines of the log.
 
-The running log of the manytasks is written into `manytasks.txt` 
+The running log of the manytasks is written into `sample_config.logs/manytasks.txt` 
 
-The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirected to `task-[index].txt`.
+The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirected to `sample_config.logs/task-[index].txt`.
 
 ## Sample Configuration
 
@@ -46,20 +48,9 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
   "configs": {
     "==base==": {          # basic configurations
       "--word-emb": [50, 100]
+      "--learning-rate": "{range(0.001, 0.1, 0.001)}"
     },
-    "==more==": [          # [can be empty] some different configurations
-      {                    # supposing using lstm as the representation layer
-        "--use-lstm": True,
-        "--lstm-hidden": 200
-        ...
-      },
-      {                    # supposing using transformer as the representation layer
-        "--use-transformer": True,
-        "--num-head": 8,
-        "--num-layer": 6,
-        ...
-      }
-    ]
+    "==more==": []
   }
 }
 ```
@@ -69,6 +60,7 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
 
 - [x] Colorize the CLI tools
 - [x] Disable the web UI by default
+- [x] Support for configuration with python script
 
 **2019.12.11**, About one year later, after submitting my ACL 2020 paper, I add some new features to the tool. Good luck~
 
