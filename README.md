@@ -19,9 +19,11 @@ or you can install from github to get the newest features:
 
 A sample ManyTasks configuration is stored in `sample_config.hjson`.
 
+You can create a config by `manytasks init`
+
 - Running
 
-You can run many tasks by `manytasks sample_config`.
+You can run many tasks by `manytasks run sample_config`.
 
 - Enable Web UI
 
@@ -61,6 +63,7 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
 - [x] Colorize the CLI tools
 - [x] Disable the web UI by default
 - [x] Support for configuration with python script
+- [x] Support for init a config
 
 **2019.12.11**, About one year later, after submitting my ACL 2020 paper, I add some new features to the tool. Good luck~
 
