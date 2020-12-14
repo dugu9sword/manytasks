@@ -23,7 +23,7 @@ You can create a config by `manytasks init`
 
 - Running
 
-You can run many tasks by `manytasks sample_config`.
+You can run many tasks by `manytasks run sample_config`.
 
 - Enable Web UI
 
