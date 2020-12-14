@@ -12,7 +12,7 @@ from time import sleep
 from pathlib import Path
 import random
 from manytasks.util import Color, log_config, log, current_time
-from manytasks.config_loader import load_config
+from manytasks.config_loader import load_config, init_config
 from manytasks import cuda_manager
 
 
@@ -47,23 +47,34 @@ def run_task(executor, runnable, task: Task):
 
 def parse_opt():
     parser = ArgumentParser()
-    parser.add_argument(dest='config_path',
-                        action='store',
-                        help='Specify the config path')
-    parser.add_argument('--random',
+    subparsers = parser.add_subparsers(dest='mode')
+    run_mode = subparsers.add_parser("run")
+    run_mode.add_argument(dest='config_path',
+                         action='store',
+                         help='Specify the config path')
+    run_mode.add_argument('--random',
                         dest='random_exe',
                         action='store_true',
                         help='Random execution')
-    parser.add_argument(
+    run_mode.add_argument(
         '--ui',
         dest='ui',
         action="store_true",
         help="Whether to start a web interface showing the status")
+    init_mode = subparsers.add_parser("init")
     opt = parser.parse_args()
+    if opt.mode is None:
+        print("You must specify a command, e.g. :")
+        print("\t1. Run `manytasks init` to create a config")
+        print("\t2. Run `manytasks run -h` to see how to run tasks")
+        exit()
     return opt
 
 
 def preprocess(opt):
+    if opt.mode == "init":
+        init_config()
+        exit()
     if ".hjson" not in opt.config_path:
         opt.config_path += '.hjson'
     if not os.path.exists(opt.config_path):
