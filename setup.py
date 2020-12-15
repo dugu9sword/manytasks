@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="manytasks",
-    version="1.2",
+    version="1.3",
     keywords=["manytasks", ],
     description="eds sdk",
     long_description="A tool for deploying many tasks automatically.",

@@ -14,6 +14,7 @@ import random
 from manytasks.util import Color, log_config, log, current_time
 from manytasks.config_loader import load_config, init_config
 from manytasks import cuda_manager
+from tailer import tail
 
 
 def run_task(executor, runnable, task: Task):
@@ -46,35 +47,66 @@ def run_task(executor, runnable, task: Task):
 
 
 def parse_opt():
-    parser = ArgumentParser()
+    usage = "You must specify a command, e.g. :\n" + \
+        "\t1. Run `manytasks init` to create a config\n" + \
+        "\t2. Run `manytasks run -h` to see how to run tasks\n" + \
+        "\t3. If you print the result at the end of a task, run `manytasks show -h` to see how to show results of each task"
+
+    parser = ArgumentParser(usage=usage)
     subparsers = parser.add_subparsers(dest='mode')
+    # create a config file
+    init_mode = subparsers.add_parser("init")
+    # run a config file
     run_mode = subparsers.add_parser("run")
     run_mode.add_argument(dest='config_path',
-                         action='store',
-                         help='Specify the config path')
+                          action='store',
+                          help='Specify the config path')
     run_mode.add_argument('--random',
-                        dest='random_exe',
-                        action='store_true',
-                        help='Random execution')
+                          dest='random_exe',
+                          action='store_true',
+                          help='Random execution')
     run_mode.add_argument(
         '--ui',
         dest='ui',
         action="store_true",
         help="Whether to start a web interface showing the status")
-    init_mode = subparsers.add_parser("init")
+    # show the result
+    show_mode = subparsers.add_parser("show")
+    show_mode.add_argument(dest='log_path',
+                           action='store',
+                           help='Specify the log path')
+
     opt = parser.parse_args()
     if opt.mode is None:
-        print("You must specify a command, e.g. :")
-        print("\t1. Run `manytasks init` to create a config")
-        print("\t2. Run `manytasks run -h` to see how to run tasks")
+        print(usage)
+        exit()
+    elif opt.mode == "init":
+        init_config()
+        exit()
+    elif opt.mode == 'show':
+        if ".logs" not in opt.log_path:
+            opt.log_path += '.logs'
+        infos = []
+        found_index = False
+        for line in open("{}/status.txt".format(opt.log_path)):
+            if line.strip() == '>>>>>> Show the task list...':
+                found_index = True
+            if line.strip() == '>>>>>> Start execution...':
+                break
+            if found_index:
+                infos.append(line)
+                # print(line)
+        print("".join(infos))
+
+        print('>>>>>> Show the last line...')
+        for i in range(len(infos) - 5):
+            print(tail(open("{}/task-{}.txt".format(opt.log_path, i)), lines=1)[0])
+
         exit()
     return opt
 
 
 def preprocess(opt):
-    if opt.mode == "init":
-        init_config()
-        exit()
     if ".hjson" not in opt.config_path:
         opt.config_path += '.hjson'
     if not os.path.exists(opt.config_path):
@@ -95,7 +127,7 @@ def preprocess(opt):
     for p in Path(shared.log_path).glob("task-*.txt"):
         p.unlink()
 
-    log_config("manytasks", log_path=shared.log_path)
+    log_config("status", log_path=shared.log_path)
     shared.executor, shared.runnable, shared.cuda, shared.concurrency, shared.tasks = load_config(
         opt.config_path)
     if opt.random_exe:

@@ -35,6 +35,10 @@ def gen_tasks(configs):
                 Arg(key=configs[i][0], value=configs[i][1][config_idx[i]]))
         args_list.append(args)
         config_idx = next_config_idx(configs, config_idx)
+    # import pdb; pdb.set_trace()
+    if len(set(map(tuple, args_list))) < len(args_list):
+        print("Seems that some tasks shares the same args")
+        exit()
     return args_list
 
 
@@ -44,7 +48,7 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
         if isinstance(val, list):
             ret.append((key, val))
             continue
-        if isinstance(val, str):
+        if isinstance(val, str) and val != "":
             if val[0] == '{' and val[-1] == '}':
                 try:
                     ret.append((key, list(eval(val[1:-1]))))
@@ -88,7 +92,7 @@ def init_config():
     executor = read_from_console("Input the executor", "python")
     runnable = read_from_console("Input the runnable", "main.py")
     # cuda = read_from_console("Which cuda devices do you want to utilize", "[-1]")
-    concurrency = int(read_from_console("How many processes will be run in parrellel", cpu_count()))
+    concurrency = int(read_from_console("How many processes will be run in parrellel"))
     hjson.dump(
         {
             "executor": executor,

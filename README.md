@@ -35,7 +35,7 @@ You can view the running status via "http://127.0.0.1:5000" (**the port number m
 
 All running logs are stored in `sample_config.logs`. You can click the item in the list to view the last 100 lines of the log.
 
-The running log of the manytasks is written into `sample_config.logs/manytasks.txt` 
+The running log of the manytasks is written into `sample_config.logs/status.txt` 
 
 The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirected to `sample_config.logs/task-[index].txt`.
 
@@ -64,6 +64,7 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
 - [x] Disable the web UI by default
 - [x] Support for configuration with python script
 - [x] Support for init a config
+- [x] Support for showing the results
 
 **2019.12.11**, About one year later, after submitting my ACL 2020 paper, I add some new features to the tool. Good luck~
 
