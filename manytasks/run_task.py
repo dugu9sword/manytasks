@@ -64,6 +64,12 @@ def parse_opt():
                           dest='random_exe',
                           action='store_true',
                           help='Random execution')
+    run_mode.add_argument('--latency',
+                          dest='latency',
+                          default=1,
+                          type=int,
+                          action='store',
+                          help='Time (seconds) between execution of two tasks')
     run_mode.add_argument(
         '--ui',
         dest='ui',
@@ -209,9 +215,9 @@ def main():
         for task in shared.tasks:
             # In some cases, not all tasks are fired.
             # Do not know why, but sleep(1) will work.
-            sleep(1)
             futures.append(
                 pool.submit(run_task, shared.executor, shared.runnable, task))
+            sleep(opt.latency)
         while True:
             done_num = 0
             for task_id, future in enumerate(futures):
