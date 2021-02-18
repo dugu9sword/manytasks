@@ -1,0 +1,22 @@
+{
+  executor: python
+  runnable: main.py
+  cuda:
+  [
+    -1
+  ]
+  concurrency: 1
+  configs:
+  {
+    ==base==:
+    [
+      --arg
+      [
+        1
+        2
+        3
+      ]
+    ]
+    ==more==: []
+  }
+}

@@ -144,7 +144,7 @@ def init_config():
     executor = read_from_console("Input the executor", "python")
     runnable = read_from_console("Input the runnable", "main.py")
     # cuda = read_from_console("Which cuda devices do you want to utilize", "[-1]")
-    concurrency = int(read_from_console("How many processes will be run in parrellel"))
+    concurrency = int(read_from_console("How many processes will be run in parrellel", 1))
     hjson.dump(
         {
             "executor": executor,
@@ -152,9 +152,9 @@ def init_config():
             "cuda": [-1],
             "concurrency": concurrency,
             "configs": {
-                "==base==": {
-                    "--arg": [1,2,3]
-                },
+                "==base==": [
+                    "--arg", [1,2,3]
+                ],
                 "==more==": []
             }
         }, open("{}.hjson".format(path), "w"))
