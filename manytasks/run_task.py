@@ -5,7 +5,7 @@ import os
 from threading import Thread
 from argparse import ArgumentParser
 from manytasks import shared
-from manytasks.shared import Task, Arg, task2str
+from manytasks.shared import Task, Arg, task2str, task2args
 from manytasks.webui import app, available_port, init_gpu_handles
 from tabulate import tabulate
 from time import sleep
@@ -15,6 +15,8 @@ from manytasks.util import Color, log_config, log, current_time
 from manytasks.config_loader import load_config, init_config
 from manytasks import cuda_manager
 from tailer import tail
+import os
+import zipfile
 
 
 def run_task(executor, runnable, task: Task):
@@ -32,8 +34,7 @@ def run_task(executor, runnable, task: Task):
         if cuda_idx != -1:
             env["CUDA_VISIBLE_DEVICES"] = str(cuda_idx)
         callee = [executor, runnable]
-        for arg in task:
-            callee.append("{}={}".format(arg.key, arg.value))
+        callee.extend(task2args(task))
         shared.task_status[task_idx] = "running"
         ret = subprocess.call(callee, stdout=output, stderr=output, env=env)
         log_info = "[{}] {} TASK {}/{} {} WITH RETURN ID {} : {}".format(
@@ -65,6 +66,16 @@ def parse_opt():
                           dest='random_exe',
                           action='store_true',
                           help='Random execution')
+    run_mode.add_argument('--latency',
+                          dest='latency',
+                          default=1,
+                          type=int,
+                          action='store',
+                          help='Time (seconds) between execution of two tasks')
+    run_mode.add_argument("--arxiv",
+                          dest='arxiv',
+                          default="",
+                          help="where to save the logs (hdfs, email, etc.)")
     run_mode.add_argument(
         '--ui',
         dest='ui',
@@ -130,8 +141,8 @@ def preprocess(opt):
     log_config("status", log_path=shared.log_path)
     shared.executor, shared.runnable, shared.cuda, shared.concurrency, shared.tasks = load_config(
         opt.config_path)
-    if opt.random_exe:
-        random.shuffle(shared.tasks)
+    # if opt.random_exe:
+    #     random.shuffle(shared.tasks)
     shared.task_status = ["pending"] * len(shared.tasks)
     for cuda_id in shared.cuda:
         cuda_manager.cuda_num[cuda_id] = 0
@@ -177,6 +188,14 @@ def show_task_list():
     log(tabulate(table))
     log()
 
+def compress(folder):
+    zipped_name = '{}.zip'.format(folder)
+    f = zipfile.ZipFile(zipped_name,'w',zipfile.ZIP_DEFLATED)
+    for dirpath, dirnames, filenames in os.walk(folder):
+        for filename in filenames:
+            f.write(os.path.join(dirpath,filename))
+    f.close()
+    return zipped_name
 
 def main():
     opt = parse_opt()
@@ -204,15 +223,18 @@ def main():
         log()
 
     # Start Execution
+    exe_order = list(range(len(shared.tasks)))
+    if opt.random_exe:
+        random.shuffle(exe_order)
     log(">>>>>> Start execution...")
     with ProcessPoolExecutor(max_workers=shared.concurrency) as pool:
         futures = []
-        for task in shared.tasks:
+        for idx in exe_order:
             # In some cases, not all tasks are fired.
             # Do not know why, but sleep(1) will work.
-            sleep(1)
             futures.append(
-                pool.submit(run_task, shared.executor, shared.runnable, task))
+                pool.submit(run_task, shared.executor, shared.runnable, shared.tasks[idx]))
+            sleep(opt.latency)
         while True:
             done_num = 0
             for task_id, future in enumerate(futures):
@@ -229,7 +251,48 @@ def main():
                 break
 
     log(Color.yellow("DONE!"))
+    if opt.arxiv != "":
+        zipped_name = compress(shared.log_path)
+        if opt.arxiv.startswith("hdfs://"):
+            try:
+                import tensorflow as tf
+            except:
+                print("You must install tensorflow to support hdfs!")
+            tf.io.gfile.copy(zipped_name, opt.arxiv)
+        elif opt.arxiv.startswith("mail://"):
+            import json
+            if not os.path.exists("mail.json"):
+                print("mail.json not found.")
+                exit(0)
+            mail_config = json.load(open("mail.json"))
 
+            import smtplib
+            from email.mime.multipart import MIMEBase, MIMEMultipart
+            from email.message import EmailMessage
+            from email import encoders
+
+
+            msg = MIMEMultipart()
+            msg['Subject'] = '[MANYTASKS] {}'.format(zipped_name)
+            msg['From'] = mail_config['from']
+            msg['To'] = opt.arxiv[7:]
+
+            part = MIMEBase('application', 'zip')
+            part.set_payload(open(zipped_name, 'rb').read())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', 'attachment', filename=zipped_name)
+            msg.attach(part)
+
+            # Send the message via our own SMTP server.
+            with smtplib.SMTP(mail_config['server']) as s:
+                s.login(mail_config['user'], mail_config['password'])
+                s.send_message(msg)
+                s.quit()
+
+        else:
+            from shutil import copyfile
+            copyfile(zipped_name, opt.arxiv)
+        print("{} copied to {}".format(zipped_name, opt.arxiv))
 
 if __name__ == '__main__':
 

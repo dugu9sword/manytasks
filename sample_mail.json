@@ -1,0 +1,6 @@
+{
+    "server": "mail.fudan.edu.cn",
+    "user": "hello",
+    "password": "123456",
+    "from": "hello@fudan.edu.cn"
+}

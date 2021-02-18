@@ -4,8 +4,9 @@ from argparse import ArgumentParser
 
 
 parser = ArgumentParser()
+parser.add_argument(dest="x", action='store')
 parser.add_argument('--a', dest='a', action='store')
-parser.add_argument('--b', dest='b', action='store')
+parser.add_argument('-b', dest='b', action='store')
 parser.add_argument('--c', dest='c', action='store')
 parsed_args = parser.parse_args()
 

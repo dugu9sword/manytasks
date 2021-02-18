@@ -6,8 +6,19 @@ Arg = NamedTuple("Arg", [("key", str),
 Task = List[Arg]
 
 
+def task2args(task: Task):
+    buff = []
+    for arg in task:
+        if arg.key.startswith("__"):
+            buff.append(arg.value)
+        else:
+            # buff.append("{}={}".format(arg.key, arg.value))
+            buff.append("{}".format(arg.key))
+            buff.append("{}".format(arg.value))
+    return buff
+
 def task2str(task: Task):
-    return " ".join(list(map(lambda arg: "{}={}".format(arg.key, arg.value), task)))
+    return " ".join(task2args(task))
 
 
 # Variables
