@@ -135,8 +135,8 @@ def preprocess(opt):
     log_config("status", log_path=shared.log_path)
     shared.executor, shared.runnable, shared.cuda, shared.concurrency, shared.tasks = load_config(
         opt.config_path)
-    if opt.random_exe:
-        random.shuffle(shared.tasks)
+    # if opt.random_exe:
+    #     random.shuffle(shared.tasks)
     shared.task_status = ["pending"] * len(shared.tasks)
     for cuda_id in shared.cuda:
         cuda_manager.cuda_num[cuda_id] = 0
@@ -209,14 +209,17 @@ def main():
         log()
 
     # Start Execution
+    exe_order = list(range(len(shared.tasks)))
+    if opt.random_exe:
+        random.shuffle(exe_order)
     log(">>>>>> Start execution...")
     with ProcessPoolExecutor(max_workers=shared.concurrency) as pool:
         futures = []
-        for task in shared.tasks:
+        for idx in exe_order:
             # In some cases, not all tasks are fired.
             # Do not know why, but sleep(1) will work.
             futures.append(
-                pool.submit(run_task, shared.executor, shared.runnable, task))
+                pool.submit(run_task, shared.executor, shared.runnable, shared.tasks[idx]))
             sleep(opt.latency)
         while True:
             done_num = 0
