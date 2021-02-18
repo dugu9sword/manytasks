@@ -15,6 +15,8 @@ from manytasks.util import Color, log_config, log, current_time
 from manytasks.config_loader import load_config, init_config
 from manytasks import cuda_manager
 from tailer import tail
+import os
+import zipfile
 
 
 def run_task(executor, runnable, task: Task):
@@ -70,6 +72,10 @@ def parse_opt():
                           type=int,
                           action='store',
                           help='Time (seconds) between execution of two tasks')
+    run_mode.add_argument("--arxiv",
+                          dest='arxiv',
+                          default="",
+                          help="where to save the logs (hdfs, email, etc.)")
     run_mode.add_argument(
         '--ui',
         dest='ui',
@@ -182,6 +188,14 @@ def show_task_list():
     log(tabulate(table))
     log()
 
+def compress(folder):
+    zipped_name = '{}.zip'.format(folder)
+    f = zipfile.ZipFile(zipped_name,'w',zipfile.ZIP_DEFLATED)
+    for dirpath, dirnames, filenames in os.walk(folder):
+        for filename in filenames:
+            f.write(os.path.join(dirpath,filename))
+    f.close()
+    return zipped_name
 
 def main():
     opt = parse_opt()
@@ -237,7 +251,48 @@ def main():
                 break
 
     log(Color.yellow("DONE!"))
+    if opt.arxiv != "":
+        zipped_name = compress(shared.log_path)
+        if opt.arxiv.startswith("hdfs://"):
+            try:
+                import tensorflow as tf
+            except:
+                print("You must install tensorflow to support hdfs!")
+            tf.io.gfile.copy(zipped_name, opt.arxiv)
+        elif opt.arxiv.startswith("mail://"):
+            import json
+            if not os.path.exists("mail.json"):
+                print("mail.json not found.")
+                exit(0)
+            mail_config = json.load(open("mail.json"))
 
+            import smtplib
+            from email.mime.multipart import MIMEBase, MIMEMultipart
+            from email.message import EmailMessage
+            from email import encoders
+
+
+            msg = MIMEMultipart()
+            msg['Subject'] = '[MANYTASKS] {}'.format(zipped_name)
+            msg['From'] = mail_config['from']
+            msg['To'] = opt.arxiv[7:]
+
+            part = MIMEBase('application', 'zip')
+            part.set_payload(open(zipped_name, 'rb').read())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', 'attachment', filename=zipped_name)
+            msg.attach(part)
+
+            # Send the message via our own SMTP server.
+            with smtplib.SMTP(mail_config['server']) as s:
+                s.login(mail_config['user'], mail_config['password'])
+                s.send_message(msg)
+                s.quit()
+
+        else:
+            from shutil import copyfile
+            copyfile(zipped_name, opt.arxiv)
+        print("{} copied to {}".format(zipped_name, opt.arxiv))
 
 if __name__ == '__main__':
 
