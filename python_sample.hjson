@@ -1,7 +1,5 @@
 {
-  // The python interceptor
   "executor": "python",
-  // The runnable file
   "runnable": "sample_task.py",
   // When cuda is set to -1/[]/[-1], ManyTasks will not set 
   // the environment variables CUDA_VISIBLE_DEVICES. 
@@ -9,22 +7,16 @@
   // How many processes will be run in parallel?
   "concurrency": 2,
   "configs": {
-    "==base==": {
-      // You can pass a list, split by a comma "," or not.
-      "--a": [
-        111
-        222
-      ],
+    "==base==": [
+      "this is a value without key", 
+      // You can pass a list
+      "--a", [111, 222],
       // You can even pass a python script which returns an iterable
-      "--b": "{range(2)}",
-    },
+      "-b", '{range(2)}'
+    ]
     "==more==": [
-      {
-        "--c": [1, 2]
-      }
-      {
-        "--c": [4]
-      }
+      ["--c", [1, 2]],
+      ["--c", [4]]
     ]
   }
 }

@@ -32,7 +32,7 @@ def gen_tasks(configs):
         args: Task = []
         for i in range(len(configs)):
             args.append(
-                Arg(key=configs[i][0], value=configs[i][1][config_idx[i]]))
+                Arg(key=configs[i][0], value=str(configs[i][1][config_idx[i]])))
         args_list.append(args)
         config_idx = next_config_idx(configs, config_idx)
     # import pdb; pdb.set_trace()
@@ -42,21 +42,73 @@ def gen_tasks(configs):
     return args_list
 
 
+def check_key(ele):
+    if isinstance(ele, str) and ele.startswith("-"):
+        try:
+            float(ele.lstrip("-"))
+            return False
+        except:
+            return True
+    else:
+        return False
+
+
+def nonekey_generator():
+    idx = 0
+    while True:
+        idx += 1
+        yield "__{}".format(idx)
+
+
 def parse_config(config: dict) -> List[Tuple[str, List]]:
+    nonekey = nonekey_generator()
     ret = []
-    for key, val in config.items():
-        if isinstance(val, list):
-            ret.append((key, val))
+    
+    current_key = None
+    for ele in config:
+        if current_key is None and check_key(ele):
+            current_key = ele
             continue
-        if isinstance(val, str) and val != "":
-            if val[0] == '{' and val[-1] == '}':
-                try:
-                    ret.append((key, list(eval(val[1:-1]))))
-                except Exception:
-                    print("Error occurs when parsing {}: {}!".format(key, val))
-                    exit(1)
+        else:
+            # key-value or non-key value?
+            if isinstance(ele, list):
+                if current_key:
+                    ret.append((current_key, ele))
+                    current_key = None
+                else:
+                    ret.append((next(nonekey), ele))
                 continue
-        ret.append((key, [val]))
+            if isinstance(ele, str) and ele != "":
+                if ele[0] == '{' and ele[-1] == '}':
+                    try:
+                        val = list(eval(ele[1:-1]))
+                        if current_key:
+                            ret.append((current_key, val))
+                            current_key = None
+                        else:
+                            ret.append((next(nonekey), val))
+                    except Exception:
+                        print("Error occurs when parsing {}: {}!".format(current_key, ele))
+                        exit(1)
+                    continue
+                if current_key:
+                    ret.append((current_key, ele))
+                    current_key = None  
+                else:
+                    ret.append((next(nonekey), ele))
+    # for key, val in config.items():
+    #     if isinstance(val, list):
+    #         ret.append((key, val))
+    #         continue
+    #     if isinstance(val, str) and val != "":
+    #         if val[0] == '{' and val[-1] == '}':
+    #             try:
+    #                 ret.append((key, list(eval(val[1:-1]))))
+    #             except Exception:
+    #                 print("Error occurs when parsing {}: {}!".format(key, val))
+    #                 exit(1)
+    #             continue
+    #     ret.append((key, [val]))
     return ret
 
 

@@ -1,0 +1,14 @@
+{
+  "executor": "bash",
+  "runnable": "bash_sample.sh",
+  "cuda": [-1],
+  "concurrency": 2,
+  "configs": {
+    "==base==": [
+      "{range(1, 4)}",
+      ["China", "USA"]
+    ]
+    "==more==": [
+    ]
+  }
+}

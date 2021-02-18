@@ -49,8 +49,8 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
   "concurrency": 2,        # number of multi-processes 
   "configs": {
     "==base==": {          # basic configurations
-      "--word-emb": [50, 100]
-      "--learning-rate": "{range(0.001, 0.1, 0.001)}"
+      "--word-emb", [50, 100],
+      "--learning-rate", "{range(0.001, 0.1, 0.001)}"
     },
     "==more==": []
   }
@@ -58,6 +58,12 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
 ```
 
 ## History
+
+**2021.2.18**, The args will be written in the form of `list` instead of `dict` to support non-key arguments.
+
+- [x] Non-key arguments
+
+
 **2020.12.12**, Big changes! I will resubmit my paper to ACL 2021 recently. Before that, I want to publish this repo to `pypi` so that you can install it by `pip install ...` directly. I rename `manytasks` to `manytasks` to make the name of the tool easier to recognize, and change the description *A toy tool for deep learning, which helps explore different net configurations.* to *A tool for deploying many tasks automatically.*
 
 - [x] Colorize the CLI tools

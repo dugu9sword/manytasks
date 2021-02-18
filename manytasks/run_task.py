@@ -5,7 +5,7 @@ import os
 from threading import Thread
 from argparse import ArgumentParser
 from manytasks import shared
-from manytasks.shared import Task, Arg, task2str
+from manytasks.shared import Task, Arg, task2str, task2args
 from manytasks.webui import app, available_port, init_gpu_handles
 from tabulate import tabulate
 from time import sleep
@@ -32,8 +32,7 @@ def run_task(executor, runnable, task: Task):
         if cuda_idx != -1:
             env["CUDA_VISIBLE_DEVICES"] = str(cuda_idx)
         callee = [executor, runnable]
-        for arg in task:
-            callee.append("{}={}".format(arg.key, arg.value))
+        callee.extend(task2args(task))
         shared.task_status[task_idx] = "running"
         ret = subprocess.call(callee, stdout=output, stderr=output, env=env)
         log_info = "[{}] {} TASK {}/{} {} WITH RETURN ID {} : {}".format(
