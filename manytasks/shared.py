@@ -25,7 +25,6 @@ def task2str(task: Task):
 task_name = "<task>"
 log_path = "<path>"
 executor = "<python>"
-runnable = "<main.py>"
 cuda = [0, 1, 2]
 concurrency = -1
 tasks: List[Task] = [

@@ -115,7 +115,6 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
 def load_config(path="sample_config.hjson"):
     config = hjson.load(fp=open(path))
     executor = config["executor"]
-    runnable = config["runnable"]
     cuda = config["cuda"]
     if cuda == [] or cuda == -1:
         cuda = [-1]
@@ -130,7 +129,7 @@ def load_config(path="sample_config.hjson"):
         for more_conf in more_confs:
             tasks.extend(gen_tasks(base_conf + more_conf))
 
-    return executor, runnable, cuda, concurrency, tasks
+    return executor, cuda, concurrency, tasks
 
 
 def read_from_console(prompt, default):
@@ -142,13 +141,11 @@ def read_from_console(prompt, default):
 def init_config():
     path = read_from_console("Input the config name", "config")
     executor = read_from_console("Input the executor", "python")
-    runnable = read_from_console("Input the runnable", "main.py")
     # cuda = read_from_console("Which cuda devices do you want to utilize", "[-1]")
     concurrency = int(read_from_console("How many processes will be run in parrellel", 1))
     hjson.dump(
         {
             "executor": executor,
-            "runnable": runnable,
             "cuda": [-1],
             "concurrency": concurrency,
             "configs": {

@@ -1,6 +1,5 @@
 {
-  "executor": "bash",
-  "runnable": "bash_sample.sh",
+  "executor": "bash bash_sample.sh",
   "cuda": [-1],
   "concurrency": 2,
   "configs": {
