@@ -19,7 +19,7 @@ import os
 import zipfile
 
 
-def run_task(executor, runnable, task: Task):
+def run_task(executor, task: Task):
     task_idx = shared.tasks.index(task)
     cuda_idx = cuda_manager.acquire_cuda()
     log("[{}] {} TASK {}/{} {} : {}".format(
@@ -33,7 +33,7 @@ def run_task(executor, runnable, task: Task):
         env = os.environ.copy()
         if cuda_idx != -1:
             env["CUDA_VISIBLE_DEVICES"] = str(cuda_idx)
-        callee = [executor, runnable]
+        callee = executor.split(" ")
         callee.extend(task2args(task))
         shared.task_status[task_idx] = "running"
         ret = subprocess.call(callee, stdout=output, stderr=output, env=env)
@@ -139,8 +139,7 @@ def preprocess(opt):
         p.unlink()
 
     log_config("status", log_path=shared.log_path)
-    shared.executor, shared.runnable, shared.cuda, shared.concurrency, shared.tasks = load_config(
-        opt.config_path)
+    shared.executor, shared.cuda, shared.concurrency, shared.tasks = load_config(opt.config_path)
     # if opt.random_exe:
     #     random.shuffle(shared.tasks)
     shared.task_status = ["pending"] * len(shared.tasks)
@@ -233,7 +232,7 @@ def main():
             # In some cases, not all tasks are fired.
             # Do not know why, but sleep(1) will work.
             futures.append(
-                pool.submit(run_task, shared.executor, shared.runnable, shared.tasks[idx]))
+                pool.submit(run_task, shared.executor, shared.tasks[idx]))
             sleep(opt.latency)
         while True:
             done_num = 0
