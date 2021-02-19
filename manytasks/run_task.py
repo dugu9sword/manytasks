@@ -22,10 +22,10 @@ import zipfile
 def run_task(executor, task: Task):
     task_idx = shared.tasks.index(task)
     cuda_idx = cuda_manager.acquire_cuda()
-    log("[{}] {} TASK {}/{} {} : {}".format(
-        current_time(), Color.magenta("START"), shared.tasks.index(task),
+    log("[{}] {} TASK {}/{} {} : {} {}".format(
+        current_time(), Color.magenta("START"),shared.tasks.index(task),
         len(shared.tasks),
-        "(ON CUDA {})".format(cuda_idx) if cuda_idx != -1 else "",
+        "(ON CUDA {})".format(cuda_idx) if cuda_idx != -1 else "", shared.executor,
         task2str(task)))
     with open(
             "{}/task-{}.txt".format(shared.log_path, shared.tasks.index(task)),
@@ -37,10 +37,11 @@ def run_task(executor, task: Task):
         callee.extend(task2args(task))
         shared.task_status[task_idx] = "running"
         ret = subprocess.call(callee, stdout=output, stderr=output, env=env)
-        log_info = "[{}] {} TASK {}/{} {} WITH RETURN ID {} : {}".format(
+        log_info = "[{}] {} TASK {}/{} {} WITH RETURN ID {} : {} {}".format(
             current_time(), "FINISH", shared.tasks.index(task),
             len(shared.tasks),
             "(ON CUDA {})".format(cuda_idx) if cuda_idx != -1 else "", ret,
+            shared.executor,
             task2str(task))
         log(Color.green(log_info) if ret == 0 else Color.red(log_info))
         cuda_manager.release_cuda(cuda_idx)
