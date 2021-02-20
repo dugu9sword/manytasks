@@ -4,3 +4,4 @@ nvidia-ml-py3
 tailer
 hjson
 tabulate
+numpy

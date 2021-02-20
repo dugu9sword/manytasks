@@ -17,13 +17,19 @@ from manytasks import cuda_manager
 from tailer import tail
 import os
 import zipfile
+import re
+from typing import List
+from tabulate import tabulate
+from collections import OrderedDict
+import numpy as np
+import importlib
 
 
 def run_task(executor, task: Task):
     task_idx = shared.tasks.index(task)
     cuda_idx = cuda_manager.acquire_cuda()
-    log("[{}] {} TASK {}/{} {} : {} {}".format(
-        current_time(), Color.magenta("START"),shared.tasks.index(task),
+    log("{} [{}] {} TASK {}/{} {} : {} {}".format(
+        Color.magenta("→"), current_time(), "START",shared.tasks.index(task),
         len(shared.tasks),
         "(ON CUDA {})".format(cuda_idx) if cuda_idx != -1 else "", shared.executor,
         task2str(task)))
@@ -37,15 +43,45 @@ def run_task(executor, task: Task):
         callee.extend(task2args(task))
         shared.task_status[task_idx] = "running"
         ret = subprocess.call(callee, stdout=output, stderr=output, env=env)
-        log_info = "[{}] {} TASK {}/{} {} WITH RETURN ID {} : {} {}".format(
+        log_info = "{} [{}] {} TASK {}/{} {} WITH RETURN ID {} : {} {}".format(
+            Color.green("√") if ret == 0 else Color.red("×"), 
             current_time(), "FINISH", shared.tasks.index(task),
             len(shared.tasks),
             "(ON CUDA {})".format(cuda_idx) if cuda_idx != -1 else "", ret,
             shared.executor,
             task2str(task))
-        log(Color.green(log_info) if ret == 0 else Color.red(log_info))
+        log(log_info)
         cuda_manager.release_cuda(cuda_idx)
         return ret
+
+
+def extract_last_line(text: List[str]):
+    return text[-1].strip()
+
+def show(log_path, extract):
+    tasks = {}
+    status = open("{}/status.txt".format(log_path)).readlines()
+    for line in status:
+        found = re.search(r"TASK (\d+)/(\d+).*: (.*)", line)
+        if found:
+            idx = int(found.group(1))
+            cmd = found.group(3)
+            tasks[idx] = cmd
+    tasks = OrderedDict(sorted(tasks.items()))
+    table = []
+    header = ["idx", "cmd"]
+    ret = None
+    for idx in tasks:
+        ret = extract(open("{}/task-{}.txt".format(log_path, idx)).readlines())
+        table.append([idx, tasks[idx], *ret.values()])
+    if ret:
+        header.extend(list(ret.keys()))
+        table.insert(0, header)
+    result = tabulate(table)
+    f = open("{}/extraction.txt".format(log_path), "w")
+    print(result)
+    print(result, file=f)
+    
 
 
 def parse_opt():
@@ -87,6 +123,12 @@ def parse_opt():
     show_mode.add_argument(dest='log_path',
                            action='store',
                            help='Specify the log path')
+    show_mode.add_argument("--extract",
+                           dest='extract',
+                           action='store',
+                           default="",
+                           help='Specify the function for extraction')
+
 
     opt = parser.parse_args()
     if opt.mode is None:
@@ -98,22 +140,11 @@ def parse_opt():
     elif opt.mode == 'show':
         if ".logs" not in opt.log_path:
             opt.log_path += '.logs'
-        infos = []
-        found_index = False
-        for line in open("{}/status.txt".format(opt.log_path)):
-            if line.strip() == '>>>>>> Show the task list...':
-                found_index = True
-            if line.strip() == '>>>>>> Start execution...':
-                break
-            if found_index:
-                infos.append(line)
-                # print(line)
-        print("".join(infos))
-
-        print('>>>>>> Show the last line...')
-        for i in range(len(infos) - 5):
-            print(tail(open("{}/task-{}.txt".format(opt.log_path, i)), lines=1)[0])
-
+        if opt.extract == "":
+            show(opt.log_path, extract_last_line)
+        else:
+            extract = getattr(importlib.import_module(opt.extract), "extract")
+            show(opt.log_path, extract)
         exit()
     return opt
 
