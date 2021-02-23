@@ -78,6 +78,8 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
                 else:
                     ret.append((next(nonekey), ele))
                 continue
+            if isinstance(ele, int) or isinstance(ele, float):
+                ele = str(ele)
             if isinstance(ele, str) and ele != "":
                 if ele[0] == '{' and ele[-1] == '}':
                     try:
