@@ -56,7 +56,7 @@ def run_task(executor, task: Task):
 
 
 def extract_last_line(text: List[str]):
-    return text[-1].strip()
+    return {"last_line": text[-1].strip()}
 
 def show(log_path, extract):
     tasks = {}
