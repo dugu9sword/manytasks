@@ -150,14 +150,17 @@ def parse_opt():
 
 
 def preprocess(opt):
-    if ".hjson" not in opt.config_path:
-        opt.config_path += '.hjson'
+    if not (opt.config_path.endswith(".hjson") or opt.config_path.endswith(".json")):
+        opt.config_path += '.json'
     if not os.path.exists(opt.config_path):
         print("Config file {} not found.".format(opt.config_path))
         exit()
 
     shared.task_name = opt.config_path
-    shared.log_path = "{}.logs".format(opt.config_path[:-6])
+    if opt.config_path.endswith(".json"):
+        shared.log_path = "{}.logs".format(opt.config_path[:-5])
+    elif opt.config_path.endswith(".hjson"):
+        shared.log_path = "{}.logs".format(opt.config_path[:-6])
 
     if os.path.exists(shared.log_path):
         override = input(

@@ -3,5 +3,6 @@ flask
 nvidia-ml-py3
 tailer
 hjson
+jstyleson
 tabulate
 numpy

@@ -1,4 +1,5 @@
 import hjson
+import jstyleson
 from typing import List, Tuple
 from manytasks.shared import Arg, Task
 
@@ -114,8 +115,11 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
     return ret
 
 
-def load_config(path="sample_config.hjson"):
-    config = hjson.load(fp=open(path))
+def load_config(path="sample_config.json"):
+    if path.endswith(".json"):
+        config = jstyleson.load(fp=open(path))
+    elif path.endswith(".hjson"):
+        config = hjson.load(fp=open(path))
     executor = config["executor"]
     cuda = config["cuda"]
     if cuda == [] or cuda == -1:
@@ -145,7 +149,7 @@ def init_config():
     executor = read_from_console("Input the executor", "python")
     # cuda = read_from_console("Which cuda devices do you want to utilize", "[-1]")
     concurrency = int(read_from_console("How many processes will be run in parrellel", 1))
-    hjson.dump(
+    jstyleson.dump(
         {
             "executor": executor,
             "cuda": [-1],
@@ -156,4 +160,4 @@ def init_config():
                 ],
                 "==more==": []
             }
-        }, open("{}.hjson".format(path), "w"))
+        }, open("{}.json".format(path), "w"), indent=4)
