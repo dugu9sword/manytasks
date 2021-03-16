@@ -1,6 +1,9 @@
-import hjson
-import jstyleson
+import multiprocessing
 from typing import List, Tuple
+
+import jstyleson
+
+from manytasks import shared
 from manytasks.shared import Arg, Task
 
 
@@ -27,20 +30,18 @@ def gen_tasks(configs):
             tmp_configs.append((configs[i][0], configs[i][1]))
     configs = tmp_configs
 
-    args_list: List[Task] = []
+    task_list: List[Task] = []
     config_idx = [0 for _ in range(len(configs))]
     while config_idx is not None:
-        args: Task = []
+        task: Task = []
         for i in range(len(configs)):
-            args.append(
-                Arg(key=configs[i][0], value=str(configs[i][1][config_idx[i]])))
-        args_list.append(args)
+            task.append(Arg(key=configs[i][0], value=str(configs[i][1][config_idx[i]])))
+        task_list.append(task)
         config_idx = next_config_idx(configs, config_idx)
-    # import pdb; pdb.set_trace()
-    if len(set(map(tuple, args_list))) < len(args_list):
+    if len(set(map(tuple, task_list))) < len(task_list):
         print("Seems that some tasks shares the same args")
         exit()
-    return args_list
+    return task_list
 
 
 def check_key(ele):
@@ -99,48 +100,38 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
                     current_key = None  
                 else:
                     ret.append((next(nonekey), ele))
-    # for key, val in config.items():
-    #     if isinstance(val, list):
-    #         ret.append((key, val))
-    #         continue
-    #     if isinstance(val, str) and val != "":
-    #         if val[0] == '{' and val[-1] == '}':
-    #             try:
-    #                 ret.append((key, list(eval(val[1:-1]))))
-    #             except Exception:
-    #                 print("Error occurs when parsing {}: {}!".format(key, val))
-    #                 exit(1)
-    #             continue
-    #     ret.append((key, [val]))
     return ret
 
 
 def load_config(path="sample_config.json"):
-    if path.endswith(".json"):
-        config = jstyleson.load(fp=open(path))
-    elif path.endswith(".hjson"):
-        config = hjson.load(fp=open(path))
-    executor = config["executor"]
+    config = jstyleson.load(fp=open(path))
+
+    shared.executor = config["executor"]
+    
     cuda = config["cuda"]
     if cuda == [] or cuda == -1:
         cuda = [-1]
+    shared.cuda = cuda
+
     concurrency = config["concurrency"]
     if concurrency == "#CUDA":
         if cuda[0] != -1:
             concurrency = len(cuda)
         else:
             print("You must specify which CUDA devices you want to use if concurrency is set to #CUDA.")
+    elif concurrency == "#CPU":
+        concurrency = min(1, multiprocessing.cpu_count() - 1)
+    shared.concurrency = concurrency
+    
     base_conf = parse_config(config["configs"]["==base=="])
     more_confs = list(map(parse_config, config["configs"]["==more=="]))
-
     tasks = []
     if len(more_confs) == 0:
         tasks.extend(gen_tasks(base_conf))
     else:
         for more_conf in more_confs:
             tasks.extend(gen_tasks(base_conf + more_conf))
-
-    return executor, cuda, concurrency, tasks
+    shared.tasks = tasks
 
 
 def read_from_console(prompt, default):

@@ -14,5 +14,3 @@ dist/
 **/.ipynb_checkpoints/*
 
 *.zip
-mail.json
-config.json

@@ -1,12 +1,14 @@
-from manytasks import shared
-from flask import Flask, url_for, send_file, send_from_directory
 import json
-import socket
 import logging
 import os
-from tailer import tail
-import pynvml
+import socket
 import sys
+
+import pynvml
+from flask import Flask, send_file, send_from_directory, url_for
+from tailer import tail
+
+from manytasks import shared
 
 # cli = sys.modules['flask.cli']
 # cli.show_server_banner = lambda *x: None
@@ -84,7 +86,7 @@ def fetch_log(task_id, tail_num):
 
 @app.route("/task")
 def task():
-    ret =  json.dumps({"task_name": shared.task_name,
+    ret =  json.dumps({"config": shared.config,
                        "executor": shared.executor,
                        "cuda": shared.cuda,
                        "concurrency": shared.concurrency})

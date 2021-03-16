@@ -13,31 +13,29 @@ or you can install from github to get the newest features:
 `pip install git+https://github.com/dugu9sword/manytasks.git`
 
 
-## Usage
+## Example
 
 - Configuration
 
-A sample ManyTasks configuration is stored in `sample_config.hjson`.
-
-You can create a config by `manytasks init`
+A sample configuration is stored in `task.json`.
 
 - Running
 
-You can run many tasks by `manytasks run sample_config`.
+You can run a group of tasks by `manytasks run task`.
 
 - Enable Web UI
 
-You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line) by running: `manytasks sample_config --ui`
+You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line) by running: `manytasks run task --ui`
 
 ![sample](sample.png)
 
-- Results
+- Running Status
 
-All running logs are stored in `sample_config.logs`. You can click the item in the list to view the last 100 lines of the log.
+All running logs are stored in `task.logs`. You can click the item in the list to view the last 100 lines of the log.
 
-The running log of the manytasks is written into `sample_config.logs/status.txt` 
+The running log of the manytasks is written into `task.logs/status.txt` 
 
-The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirected to `sample_config.logs/task-[index].txt`.
+The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirected to `task.logs/task-[index].txt`.
 
 ## Sample Configuration
 
@@ -55,6 +53,16 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
   }
 }
 ```
+
+## Result Extraction
+
+Try:
+
+`manytasks show task --rule=rule.json`
+
+or:
+
+`manytasks show task --rule=rule.py`
 
 ## History
 

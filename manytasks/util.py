@@ -1,6 +1,9 @@
-from colorama import Fore, Back
 import os
 import time
+
+from colorama import Back, Fore
+from tabulate import tabulate
+from manytasks import shared
 
 
 class Color(object):
@@ -58,3 +61,42 @@ def log_config(filename, log_path, append=False):
 
 def current_time():
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+def draw_logo():
+    log("""
+    =================================================================
+                                      _____              _         
+          /\/\    __ _  _ __   _   _ /__   \  __ _  ___ | | __ ___ 
+         /    \  / _` || '_ \ | | | |  / /\/ / _` |/ __|| |/ // __| 
+        / /\/\ \| (_| || | | || |_| | / /   | (_| |\__ \|   < \__ \ 
+        \/    \/ \__,_||_| |_| \__, | \/     \__,_||___/|_|\_\|___/ 
+                               |___/                               
+    =================================================================
+    """)
+
+def show_task_list():
+    log(">>>>>> Show the task list...")
+    keys = []
+    for task in shared.tasks:
+        for arg in task:
+            if arg.key not in keys:
+                keys.append(arg.key)
+
+    header = ['idx'] + keys
+    # header = list(map(Color.cyan, header))
+    table = [header]
+    for idx, task in enumerate(shared.tasks):
+        # log("\t{} : {}".format(idx, arg2str(arg_group)), target='cf')
+        values = []
+        for key in keys:
+            found = False
+            for arg in task:
+                if arg.key == key:
+                    found = True
+                    values.append(arg.value)
+                    break
+            if not found:
+                values.append("-")
+        table.append([idx] + values)
+    log(tabulate(table))
+    log()

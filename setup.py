@@ -22,7 +22,6 @@ setup(
     entry_points={
         'console_scripts': [
             'manytasks = manytasks.run_task:main',
-            # 'manytasks-init = manytasks.init_config:main'
         ]
     }
 )
