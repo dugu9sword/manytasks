@@ -58,6 +58,8 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
 
 ## History
 
+**2021.3.16**, Support for JSON rule.
+
 **2021.2.18**, Big changes.
 
 - [x] Support Non-key arguments
