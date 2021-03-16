@@ -146,18 +146,13 @@ def read_from_console(prompt, default):
 
 def init_config():
     path = read_from_console("Input the config name", "config")
-    executor = read_from_console("Input the executor", "python")
-    # cuda = read_from_console("Which cuda devices do you want to utilize", "[-1]")
-    concurrency = int(read_from_console("How many processes will be run in parrellel", 1))
     jstyleson.dump(
         {
-            "executor": executor,
+            "executor": "python main.py",
             "cuda": [-1],
-            "concurrency": concurrency,
+            "concurrency": 1,
             "configs": {
-                "==base==": [
-                    "--arg", [1,2,3]
-                ],
+                "==base==": [],
                 "==more==": []
             }
         }, open("{}.json".format(path), "w"), indent=4)

@@ -86,7 +86,6 @@ def fetch_log(task_id, tail_num):
 def task():
     return json.dumps({"task_name": shared.task_name,
                        "executor": shared.executor,
-                       "runnable": shared.runnable,
                        "cuda": shared.cuda,
                        "concurrency": shared.concurrency})
 
