@@ -1,0 +1,12 @@
+{
+    "accuracy": {
+        "include": "valid on 'valid' subset",
+        "regex": "accuracy (\\d\\.*\\d*)",
+        "reduce": "max"
+    },
+    "loss": {
+        "include": "valid on 'valid' subset",
+        "regex": "loss (\\d\\.*\\d*)",
+        "reduce": "min"
+    }
+}

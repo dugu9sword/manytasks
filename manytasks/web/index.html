@@ -22,9 +22,8 @@
             function refresh() {
                 $.get(url = "/task", function (data, status) {
                     data = JSON.parse(data);
-                    $("#task_name").text(data.task_name);
+                    $("#config").text(data.task_name);
                     $("#executor").text(data.executor);
-                    $("#runnable").text(data.runnable);
                     $("#cuda").text(data.cuda);
                     $("#concurrency").text(data.concurrency);
                 });
@@ -72,7 +71,7 @@
 
 
                 $.get("/status", function (data, status) {
-                    prefix = "  " + $("#executor").text() + " " + $("#runnable").text() + " ";
+                    prefix = "  " + $("#executor").text() + " ";
                     finish_num = 0;
                     total_num = 0;
                     $("#status_list").empty();
@@ -153,8 +152,6 @@
             <td id="config">LSTM</td>
             <td><b>Executor</b></td>
             <td id="executor">executor</td>
-            <td><b>Runnable</b></td>
-            <td id="runnable">runnable</td>
         </tr>
         <tr>
             <td><b>Concurrency</b></td>

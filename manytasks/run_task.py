@@ -23,6 +23,8 @@ from tabulate import tabulate
 from collections import OrderedDict
 import numpy as np
 import importlib
+import jstyleson
+from functools import partial
 
 
 def run_task(executor, task: Task):
@@ -58,7 +60,29 @@ def run_task(executor, task: Task):
 def extract_last_line(text: List[str]):
     return {"last_line": text[-1].strip()}
 
-def show(log_path, extract):
+
+def extract_by_regex(regex_dict, text: List[str]):
+    ret = {}
+    for k, v in regex_dict.items():
+        data = []
+        for line in text:
+            if "include" in v and v["include"] not in line:
+                continue
+            found = re.search(v["regex"], line)
+            if found:
+                data.append(float(found.group(1)))
+        reduce_fn = {
+            "max": max,
+            "min": min,
+            "sum": sum
+        }[v['reduce']]
+        if len(data) == 0:
+            ret[k] = None
+        else:
+            ret[k] = reduce_fn(data)   
+    return ret
+
+def show(log_path, extract_fn):
     tasks = {}
     status = open("{}/status.txt".format(log_path)).readlines()
     for line in status:
@@ -72,13 +96,13 @@ def show(log_path, extract):
     header = ["idx", "cmd"]
     ret = None
     for idx in tasks:
-        ret = extract(open("{}/task-{}.txt".format(log_path, idx)).readlines())
+        ret = extract_fn(open("{}/task-{}.txt".format(log_path, idx)).readlines())
         table.append([idx, tasks[idx], *ret.values()])
     if ret:
         header.extend(list(ret.keys()))
         table.insert(0, header)
     result = tabulate(table)
-    f = open("{}/extraction.txt".format(log_path), "w")
+    f = open("{}/result.txt".format(log_path), "w")
     print(result)
     print(result, file=f)
     
@@ -123,11 +147,11 @@ def parse_opt():
     show_mode.add_argument(dest='log_path',
                            action='store',
                            help='Specify the log path')
-    show_mode.add_argument("--extract",
-                           dest='extract',
+    show_mode.add_argument("--rule",
+                           dest='rule',
                            action='store',
                            default="",
-                           help='Specify the function for extraction')
+                           help='Specify the extraction rule')
 
 
     opt = parser.parse_args()
@@ -140,11 +164,15 @@ def parse_opt():
     elif opt.mode == 'show':
         if ".logs" not in opt.log_path:
             opt.log_path += '.logs'
-        if opt.extract == "":
-            show(opt.log_path, extract_last_line)
+        if opt.rule == "":
+            show(opt.log_path, extract_fn=extract_last_line)
+        elif opt.rule.endswith(".json"):
+            show(opt.log_path, extract_fn=partial(extract_by_regex, jstyleson.load(open(opt.rule))))
+        elif opt.rule.endswith(".py"):
+            extract_fn = getattr(importlib.import_module(opt.rule), "extract")
+            show(opt.log_path, extract_fn=extract_fn)
         else:
-            extract = getattr(importlib.import_module(opt.extract), "extract")
-            show(opt.log_path, extract)
+            print("you must specify a legal rule file! (*.py, *.json)")
         exit()
     return opt
 

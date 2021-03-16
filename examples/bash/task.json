@@ -1,5 +1,5 @@
 {
-  "executor": "bash bash_sample.sh",
+  "executor": "bash sample.sh",
   "cuda": [-1],
   "concurrency": 2,
   "configs": {

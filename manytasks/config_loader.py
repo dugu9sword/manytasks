@@ -125,6 +125,11 @@ def load_config(path="sample_config.json"):
     if cuda == [] or cuda == -1:
         cuda = [-1]
     concurrency = config["concurrency"]
+    if concurrency == "#CUDA":
+        if cuda[0] != -1:
+            concurrency = len(cuda)
+        else:
+            print("You must specify which CUDA devices you want to use if concurrency is set to #CUDA.")
     base_conf = parse_config(config["configs"]["==base=="])
     more_confs = list(map(parse_config, config["configs"]["==more=="]))
 
@@ -146,18 +151,13 @@ def read_from_console(prompt, default):
 
 def init_config():
     path = read_from_console("Input the config name", "config")
-    executor = read_from_console("Input the executor", "python")
-    # cuda = read_from_console("Which cuda devices do you want to utilize", "[-1]")
-    concurrency = int(read_from_console("How many processes will be run in parrellel", 1))
     jstyleson.dump(
         {
-            "executor": executor,
+            "executor": "python main.py",
             "cuda": [-1],
-            "concurrency": concurrency,
+            "concurrency": 1,
             "configs": {
-                "==base==": [
-                    "--arg", [1,2,3]
-                ],
+                "==base==": [],
                 "==more==": []
             }
         }, open("{}.json".format(path), "w"), indent=4)
