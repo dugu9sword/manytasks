@@ -13,29 +13,21 @@ or you can install from github to get the newest features:
 `pip install git+https://github.com/dugu9sword/manytasks.git`
 
 
-## Example
+## Quick Example
 
-- Configuration
+```
+cd examples/python
 
-A sample configuration is stored in `task.json`.
+# configuration is stored in task.json
+manytasks run task
+```
 
-- Running
+All running logs are stored in `task.logs`. 
 
-You can run a group of tasks by `manytasks run task`.
+- The running log of the manytasks is written into `task.logs/status.txt` 
 
-- Enable Web UI
+- The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirected to `task.logs/task-[index].txt`.
 
-You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line) by running: `manytasks run task --ui`
-
-![sample](sample.png)
-
-- Running Status
-
-All running logs are stored in `task.logs`. You can click the item in the list to view the last 100 lines of the log.
-
-The running log of the manytasks is written into `task.logs/status.txt` 
-
-The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirected to `task.logs/task-[index].txt`.
 
 ## Sample Configuration
 
@@ -54,7 +46,16 @@ The IO stream of tasks (e.g. `print()`, `Exception`, `Error`, ...) are redirecte
 }
 ```
 
-## Result Extraction
+## More
+
+- Enable Web UI
+
+You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line) by running: `manytasks run task --ui`
+
+![sample](sample.png)
+
+
+- Result Extraction
 
 Try:
 
@@ -63,6 +64,8 @@ Try:
 or:
 
 `manytasks show task --rule=rule.py`
+
+
 
 ## History
 
