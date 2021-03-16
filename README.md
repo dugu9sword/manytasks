@@ -66,7 +66,10 @@ or:
 
 ## History
 
-**2021.3.16**, Support for JSON rule.
+**2021.3.16**, Small changes.
+
+- [x] Support for JSON rule.
+- [x] Beautify the command line output.
 
 **2021.2.18**, Big changes.
 

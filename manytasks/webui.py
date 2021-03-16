@@ -2,10 +2,9 @@ import json
 import logging
 import os
 import socket
-import sys
 
 import pynvml
-from flask import Flask, send_file, send_from_directory, url_for
+from flask import Flask, send_file, send_from_directory
 from tailer import tail
 
 from manytasks import shared

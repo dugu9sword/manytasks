@@ -1,29 +1,22 @@
 import importlib
 import os
 import random
-import re
 import subprocess
 import sys
 import time
-import zipfile
 from argparse import ArgumentParser
-from collections import OrderedDict
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from pathlib import Path
 from threading import Thread
 from time import sleep
-from typing import List
 
 import jstyleson
-import numpy as np
-from tabulate import tabulate
-from tailer import tail
 
 from manytasks import cuda_manager, shared
 from manytasks.config_loader import init_config, load_config
 from manytasks.extraction import extract_by_regex, extract_last_line, show
-from manytasks.shared import Arg, Task, task2args, task2str, task2cmd
+from manytasks.shared import Task, task2args, task2cmd
 from manytasks.util import (Color, current_time, draw_logo, log, log_config,
                             show_task_list)
 from manytasks.webui import app, available_port, init_gpu_handles
