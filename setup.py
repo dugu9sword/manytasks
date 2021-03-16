@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="manytasks",
-    version="1.4",
+    version="1.5",
     keywords=["manytasks", ],
     description="eds sdk",
     long_description="A tool for deploying many tasks automatically.",
@@ -22,7 +22,6 @@ setup(
     entry_points={
         'console_scripts': [
             'manytasks = manytasks.run_task:main',
-            # 'manytasks-init = manytasks.init_config:main'
         ]
     }
 )

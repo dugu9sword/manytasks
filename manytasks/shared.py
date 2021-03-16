@@ -1,4 +1,4 @@
-from typing import NamedTuple, List
+from typing import List, NamedTuple
 
 # Definition
 Arg = NamedTuple("Arg", [("key", str),
@@ -20,9 +20,12 @@ def task2args(task: Task):
 def task2str(task: Task):
     return " ".join(task2args(task))
 
+def task2cmd(task: Task):
+    return executor + " " + task2str(task)
+
 
 # Variables
-task_name = "<task>"
+config_name = "<config>"
 log_path = "<path>"
 executor = "<python>"
 cuda = [0, 1, 2]
