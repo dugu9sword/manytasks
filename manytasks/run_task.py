@@ -25,6 +25,7 @@ import numpy as np
 import importlib
 import jstyleson
 from functools import partial
+import sys
 
 
 def run_task(executor, task: Task):
@@ -112,7 +113,7 @@ def parse_opt():
     usage = "You must specify a command, e.g. :\n" + \
         "\t1. Run `manytasks init` to create a config\n" + \
         "\t2. Run `manytasks run -h` to see how to run tasks\n" + \
-        "\t3. If you print the result at the end of a task, run `manytasks show -h` to see how to show results of each task"
+        "\t3. Run `manytasks show -h` to see how to extract the results of tasks"
 
     parser = ArgumentParser(usage=usage)
     subparsers = parser.add_subparsers(dest='mode')
@@ -169,7 +170,8 @@ def parse_opt():
         elif opt.rule.endswith(".json"):
             show(opt.log_path, extract_fn=partial(extract_by_regex, jstyleson.load(open(opt.rule))))
         elif opt.rule.endswith(".py"):
-            extract_fn = getattr(importlib.import_module(opt.rule), "extract")
+            sys.path.append(".")
+            extract_fn = getattr(importlib.import_module(opt.rule[:-3]), "extract")
             show(opt.log_path, extract_fn=extract_fn)
         else:
             print("you must specify a legal rule file! (*.py, *.json)")
