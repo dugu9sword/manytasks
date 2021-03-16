@@ -84,11 +84,11 @@ def fetch_log(task_id, tail_num):
 
 @app.route("/task")
 def task():
-    return json.dumps({"task_name": shared.task_name,
+    ret =  json.dumps({"task_name": shared.task_name,
                        "executor": shared.executor,
                        "cuda": shared.cuda,
                        "concurrency": shared.concurrency})
-
+    return ret
 
 @app.route("/status")
 def status():

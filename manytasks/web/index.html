@@ -22,7 +22,7 @@
             function refresh() {
                 $.get(url = "/task", function (data, status) {
                     data = JSON.parse(data);
-                    $("#task_name").text(data.task_name);
+                    $("#config").text(data.task_name);
                     $("#executor").text(data.executor);
                     $("#cuda").text(data.cuda);
                     $("#concurrency").text(data.concurrency);

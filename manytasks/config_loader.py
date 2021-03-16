@@ -125,6 +125,11 @@ def load_config(path="sample_config.json"):
     if cuda == [] or cuda == -1:
         cuda = [-1]
     concurrency = config["concurrency"]
+    if concurrency == "#CUDA":
+        if cuda[0] != -1:
+            concurrency = len(cuda)
+        else:
+            print("You must specify which CUDA devices you want to use if concurrency is set to #CUDA.")
     base_conf = parse_config(config["configs"]["==base=="])
     more_confs = list(map(parse_config, config["configs"]["==more=="]))
 
