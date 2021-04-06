@@ -24,7 +24,7 @@ def show(log_path, extract_fn):
     if ret:
         header.extend(list(ret.keys()))
         table.insert(0, header)
-    result = tabulate(table)
+    result = tabulate(table, floatfmt=".3f")
     f = open("{}/result.txt".format(log_path), "w")
     print(result)
     print(result, file=f)
