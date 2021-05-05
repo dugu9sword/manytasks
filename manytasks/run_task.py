@@ -5,7 +5,7 @@ import subprocess
 import sys
 import time
 from argparse import ArgumentParser
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
 from threading import Thread
@@ -198,7 +198,7 @@ def main():
     if opt.random_exe:
         random.shuffle(exe_order)
     log(">>>>>> Start execution...")
-    with ProcessPoolExecutor(max_workers=shared.concurrency) as pool:
+    with ThreadPoolExecutor(max_workers=shared.concurrency) as pool:
         futures = []
         for idx in exe_order:
             # In some cases, not all tasks are fired.
