@@ -4,13 +4,13 @@ A tool for deploying many tasks automatically.
 
 ## Installation
 
-The simplest way to install the package is:
+I **recommend** you install from github to get the newest features:
 
-`pip install manytasks`
+`pip install git+https://github.com/dugu9sword/manytasks.git` 
 
-or you can install from github to get the newest features:
+You can also install the package (**maybe outdated**) from pypi:
 
-`pip install git+https://github.com/dugu9sword/manytasks.git`
+`pip install manytasks [not recommended]` 
 
 
 ## Quick Example
@@ -35,7 +35,7 @@ All running logs are stored in `task.logs`.
 {
   "executor": "python some.py",    # runnable
   "cuda": [0, 1],                  # [-1 if not using cuda] cuda index to use
-  "concurrency": 2,                # number of multi-processes 
+  "concurrency": 2,                # number of multi-processes
   "configs": {
     "==base==": [                  # basic configurations
       "--word-emb", [50, 100],
@@ -69,6 +69,9 @@ or:
 
 ## History
 
+**2021.5.26**, Small changes.
+- [x] Add support for yaml rule & Deprecate support for json rule (regex in json is not readable)
+
 **2021.3.16**, Small changes.
 
 - [x] Support for JSON rule.
@@ -81,7 +84,7 @@ or:
 - [x] Remove the arg `runnable` and merge it into `executor`
 - [x] Support for result extraction
 
-**2020.12.12**, Big changes! I will resubmit my paper to ACL 2021 recently. Before that, I want to publish this repo to `pypi` so that you can install it by `pip install ...` directly. I rename `alchemist` to `manytasks` to make the name of the tool easier to recognize, and change the description *A toy tool for deep learning, which helps explore different net configurations.* to *A tool for deploying many tasks automatically.*
+**2020.12.12**, Big changes! I will submit my paper to ACL 2021 recently (accepted!). Before that, I want to publish this repo to `pypi` so that you can install it by `pip install ...` directly. I rename `alchemist` to `manytasks` to make the name of the tool easier to recognize, and change the description *A toy tool for deep learning, which helps explore different net configurations.* to *A tool for deploying many tasks automatically.*
 
 - [x] Colorize the CLI tools
 - [x] Disable the web UI by default
@@ -89,7 +92,7 @@ or:
 - [x] Support for init a config
 - [x] Support for showing the results
 
-**2019.12.11**, About one year later, after submitting my ACL 2020 paper, I add some new features to the tool. Good luck~
+**2019.12.11**, About one year later, after submitting my ACL 2020 paper (accepted!), I add some new features to the tool. Good luck~
 
 - [x] Use `.hjson` (<https://hjson.org/>) instead of `.json` for configuration, since `.hjson` is more human-readable which allows comments and missing/trailing commas
 - [x] Ask the user for overriding existing logs

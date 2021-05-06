@@ -12,6 +12,7 @@ from threading import Thread
 from time import sleep
 
 import jstyleson
+import yaml
 
 from manytasks import cuda_manager, shared
 from manytasks.config_loader import init_config, load_config
@@ -40,22 +41,21 @@ def parse_opt():
     run_mode.add_argument('--random',
                           dest='random_exe',
                           action='store_true',
-                          help='Random execution')
+                          help='Tasks are executed randomly')
     run_mode.add_argument('--latency',
                           dest='latency',
                           default=1,
                           type=int,
                           action='store',
                           help='Time (seconds) between execution of two tasks')
-    run_mode.add_argument("--arxiv",
-                          dest='arxiv',
-                          default="",
-                          help="where to save the logs (hdfs, email, etc.)")
-    run_mode.add_argument(
-        '--ui',
-        dest='ui',
-        action="store_true",
-        help="Whether to start a web interface showing the status")
+    run_mode.add_argument('--override',
+                          dest='override',
+                          action="store_true",
+                          help="Whether to override existing logs")
+    run_mode.add_argument('--ui',
+                          dest='ui',
+                          action="store_true",
+                          help="Whether to start a web interface showing the status")
     # show the result
     show_mode = subparsers.add_parser("show")
     show_mode.add_argument(dest='log_path',
@@ -79,17 +79,14 @@ def parse_opt():
             opt.log_path += '.logs'
         if opt.rule == "":
             show(opt.log_path, extract_fn=extract_last_line)
-        elif opt.rule.endswith(".json"):
-            show(opt.log_path,
-                 extract_fn=partial(extract_by_regex,
-                                    jstyleson.load(open(opt.rule))))
+        elif opt.rule.endswith(".yaml"):
+            show(opt.log_path, extract_fn=partial(extract_by_regex, yaml.load(open(opt.rule))))
         elif opt.rule.endswith(".py"):
             sys.path.append(".")
-            extract_fn = getattr(importlib.import_module(opt.rule[:-3]),
-                                 "extract")
+            extract_fn = getattr(importlib.import_module(opt.rule[:-3]), "extract")
             show(opt.log_path, extract_fn=extract_fn)
         else:
-            print("you must specify a legal rule file! (*.py, *.json)")
+            print("you must specify a legal rule file! (*.py, *.yaml)")
         exit()
     return opt
 
@@ -104,13 +101,9 @@ def preprocess(opt):
     shared.config = opt.config_path
     if opt.config_path.endswith(".json"):
         shared.log_path = "{}.logs".format(opt.config_path[:-5])
-    elif opt.config_path.endswith(".hjson"):
-        shared.log_path = "{}.logs".format(opt.config_path[:-6])
 
-    if os.path.exists(shared.log_path):
-        override = input(
-            "Logs for config {} exists, input [y] to override: ".format(
-                opt.config_path))
+    if not opt.override and os.path.exists(shared.log_path):
+        override = input("Logs for config {} exists, input [y] to override: ".format(opt.config_path))
         if override != 'y':
             print("ManyTasks Interupted.")
             exit()

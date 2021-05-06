@@ -5,6 +5,7 @@ import jstyleson
 
 from manytasks import shared
 from manytasks.shared import Arg, Task
+import psutil
 
 
 def next_config_idx(configs, config_idx):
@@ -111,7 +112,12 @@ def load_config(path="sample_config.json"):
     cuda = config["cuda"]
     if cuda == [] or cuda == -1:
         cuda = [-1]
+    
+    if cuda[0] != -1 and psutil.WINDOWS:
+        print("CUDA shoule be -1 on windows")
+        exit()
     shared.cuda = cuda
+    
 
     concurrency = config["concurrency"]
     if concurrency == "#CUDA":
@@ -120,7 +126,9 @@ def load_config(path="sample_config.json"):
         else:
             print("You must specify which CUDA devices you want to use if concurrency is set to #CUDA.")
     elif concurrency == "#CPU":
-        concurrency = min(1, multiprocessing.cpu_count() - 1)
+        concurrency = max(1, multiprocessing.cpu_count() - 1)
+    else:
+        concurrency = int(concurrency)
     shared.concurrency = concurrency
     
     base_conf = parse_config(config["configs"]["==base=="])

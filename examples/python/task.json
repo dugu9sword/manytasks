@@ -4,9 +4,13 @@
   // the environment variables CUDA_VISIBLE_DEVICES. 
   "cuda": [-1],
   // How many processes will be run in parallel?
-  "concurrency": 2,
+  //   - "#CPU" (number of CPUs)
+  //   - "#CUDA" (number of CUDA devices)
+  //   - an integer
+  "concurrency": "2",
   "configs": {
     "==base==": [
+      // You can pass an arg without a key
       "wmt14", 
       // You can pass a list
       "--arch", ["lstm", "cnn"],

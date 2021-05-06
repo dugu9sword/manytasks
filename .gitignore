@@ -9,6 +9,7 @@ test/*
 *.egg-info/
 build/
 dist/
+.eggs/
 
 **/__pycache__/*
 **/.ipynb_checkpoints/*
