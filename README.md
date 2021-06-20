@@ -46,22 +46,33 @@ All running logs are stored in `task.logs`.
 }
 ```
 
-## More
+## Advanced Usage
 
 
 - Result Extraction
 
-Try:
+You can extract results (`accuracy`, `F-1`, `BLEU`, etc. ) from generated logs by writing simple rules. 
 
-`manytasks show task --rule=rule.json`
+Try: 
 
-or:
+`manytasks show task --rule=rule.yaml`
+
+You will get:
+
+![Result Extraction](sample_rule.png)
+
+You can even write a python function to extract the results.
 
 `manytasks show task --rule=rule.py`
 
+
+
 - Factor Analsis
 
-![Factor Analysis](sample_factor.png)
+<!-- ![Factor Analysis](sample_factor.png) -->
+
+<img src="sample_factor.png" alt="drawing" width="200"/>
+
 
 ## History
 
