@@ -9,6 +9,7 @@ parser.add_argument('--arch', dest='arch', action='store')
 parser.add_argument('--layer', dest='layer', action='store')
 parser.add_argument('--opt', dest='opt', action='store')
 parser.add_argument('--lr', dest='lr', action='store')
+parser.add_argument('--decay', dest='lr', action='store')
 
 parsed_args = parser.parse_args()
 

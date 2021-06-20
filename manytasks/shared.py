@@ -5,6 +5,17 @@ Arg = NamedTuple("Arg", [("key", str),
                          ("value", object)])
 Task = List[Arg]
 
+class Mode:
+    NORMAL   = "NORMAL"
+    OVERRIDE = "OVERRIDE"
+    RESUME   = "RESUME"
+
+class Status:
+    SUCCESS  = "success"
+    FAILED   = "failed"
+    PENDING  = "pending"
+    RUNNING  = "running"
+
 
 def task2args(task: Task):
     buff = []
@@ -12,7 +23,6 @@ def task2args(task: Task):
         if arg.key.startswith("__"):
             buff.append(arg.value)
         else:
-            # buff.append("{}={}".format(arg.key, arg.value))
             buff.append("{}".format(arg.key))
             buff.append("{}".format(arg.value))
     return buff
@@ -24,7 +34,9 @@ def task2cmd(task: Task):
     return executor + " " + task2str(task)
 
 
+
 # Variables
+mode = "<mode>"
 config_name = "<config>"
 log_path = "<path>"
 executor = "<python>"

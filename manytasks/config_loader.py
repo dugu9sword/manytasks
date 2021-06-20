@@ -2,10 +2,10 @@ import multiprocessing
 from typing import List, Tuple
 
 import jstyleson
+import psutil
 
 from manytasks import shared
 from manytasks.shared import Arg, Task
-import psutil
 
 
 def next_config_idx(configs, config_idx):
