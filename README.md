@@ -48,12 +48,6 @@ All running logs are stored in `task.logs`.
 
 ## More
 
-- Enable Web UI
-
-You can view the running status via "http://127.0.0.1:5000" (**the port number may differs**, you can get the port number from the command line) by running: `manytasks run task --ui`
-
-![sample](sample.png)
-
 
 - Result Extraction
 
@@ -65,9 +59,16 @@ or:
 
 `manytasks show task --rule=rule.py`
 
+- Factor Analsis
 
+![Factor Analysis](sample_factor.png)
 
 ## History
+
+**2021.6.20**
+- [x] Deprecate support for WebUI.
+- [x] Add support for resuming from the last running status.
+- [x] Add support for factor analysis.
 
 **2021.5.26**, Small changes.
 - [x] Add support for yaml rule & Deprecate support for json rule (regex in json is not readable)

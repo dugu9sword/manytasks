@@ -1,44 +1,9 @@
 import os
 import time
 
-from colorama import Back, Fore
 from tabulate import tabulate
 
 from manytasks import shared
-
-
-class Color(object):
-    @staticmethod
-    def red(s):
-        return Fore.RED + str(s) + Fore.RESET
-
-    @staticmethod
-    def green(s):
-        return Fore.GREEN + str(s) + Fore.RESET
-
-    @staticmethod
-    def yellow(s):
-        return Fore.YELLOW + str(s) + Fore.RESET
-
-    @staticmethod
-    def blue(s):
-        return Fore.BLUE + str(s) + Fore.RESET
-
-    @staticmethod
-    def magenta(s):
-        return Fore.MAGENTA + str(s) + Fore.RESET
-
-    @staticmethod
-    def cyan(s):
-        return Fore.CYAN + str(s) + Fore.RESET
-
-    @staticmethod
-    def white(s):
-        return Fore.WHITE + str(s) + Fore.RESET
-
-    @staticmethod
-    def white_green(s):
-        return Fore.WHITE + Back.GREEN + str(s) + Fore.RESET + Back.RESET
 
 
 def log(*info, target='cf'):
@@ -84,10 +49,8 @@ def show_task_list():
                 keys.append(arg.key)
 
     header = ['idx'] + keys
-    # header = list(map(Color.cyan, header))
     table = [header]
     for idx, task in enumerate(shared.tasks):
-        # log("\t{} : {}".format(idx, arg2str(arg_group)), target='cf')
         values = []
         for key in keys:
             found = False
