@@ -2,6 +2,15 @@
 
 A tool for deploying many tasks automatically.
 
+## Publications Using this Tool
+
+- **Arxiv 2020**: *Chinese Named Entity Recognition Augmented with Lexicon Memory*. 
+- **ACL 2020**: *Evaluating and Enhancing the Robustness of Neural Network-based Dependency Parsing Models with Adversarial Examples*. 
+- **ACL 2021**: *Defense against Synonym Substitution-based Adversarial Attacks via Dirichlet Neighborhood Ensemble*.
+- **WMT 2021**: *The Volctrans Parallel Machine Translation System for WMT21 German-English News Translation Task*.
+- **EMNLP 2021**: *On the Transferability of Adversarial Attacks against Neural NLP Models*. 
+- **EMNLP 2021**: *Searching for an Effiective Defender: Benchmarking Defense against Adversarial Word Substitution*. 
+
 ## Installation
 
 I **recommend** you install from github to get the newest features:
