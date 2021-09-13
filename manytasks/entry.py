@@ -33,38 +33,17 @@ def parse_opt():
 
     # run a config file
     run_mode = subparsers.add_parser("run")
-    run_mode.add_argument(dest='config_path',
-                          action='store',
-                          help='Specify the config path')
-    run_mode.add_argument('--override',
-                          dest='override',
-                          action="store_true",
-                          help="Whether to force override existing logs")
-    run_mode.add_argument('--resume',
-                          dest='resume',
-                          action="store_true",
-                          help="Whether to resume from existing logs")
-    run_mode.add_argument('--random',
-                          dest='random_exe',
-                          action='store_true',
-                          help='Tasks are executed randomly')
-    run_mode.add_argument('--latency',
-                          dest='latency',
-                          action='store',
-                          default=1,
-                          type=int,
-                          help='Time (seconds) between execution of two tasks')
+    run_mode.add_argument(               dest="config_path", action="store", default="", type=str,   help="Specify the config path")
+    run_mode.add_argument("--output",    dest="output",      action="store", default="", type=str,   help="Specify the output path")
+    run_mode.add_argument("--override",  dest="override",    action="store_true",                    help="Whether to force override existing logs")
+    run_mode.add_argument("--resume",    dest="resume",      action="store_true",                    help="Whether to resume from existing logs")
+    run_mode.add_argument("--random",    dest="random_exe",  action="store_true",                    help="Tasks are executed randomly")
+    run_mode.add_argument("--latency",   dest="latency",     action="store", default=1,  type=int,   help="Time (seconds) between execution of two tasks")
 
     # show the result
     show_mode = subparsers.add_parser("show")
-    show_mode.add_argument(dest='log_path',
-                           action='store',
-                           help='Specify the log path')
-    show_mode.add_argument("--rule",
-                           dest='rule',
-                           action='store',
-                           default="",
-                           help='Specify the extraction rule')
+    show_mode.add_argument(              dest='log_path',    action='store',                         help='Specify the log path')
+    show_mode.add_argument("--rule",     dest='rule',        action='store', default="",             help='Specify the extraction rule')
 
     opt = parser.parse_args()
     if opt.mode is None:
@@ -79,13 +58,10 @@ def parse_opt():
         if opt.rule == "":
             show(opt.log_path, extract_fn=extract_last_line)
         elif opt.rule.endswith(".yaml"):
-            show(opt.log_path,
-                 extract_fn=partial(extract_by_regex,
-                                    yaml.safe_load(open(opt.rule))))
+            show(opt.log_path, extract_fn=partial(extract_by_regex, yaml.safe_load(open(opt.rule))))
         elif opt.rule.endswith(".py"):
             sys.path.append(".")
-            extract_fn = getattr(importlib.import_module(opt.rule[:-3]),
-                                 "extract")
+            extract_fn = getattr(importlib.import_module(opt.rule[:-3]), "extract")
             show(opt.log_path, extract_fn=extract_fn)
         else:
             print("you must specify a legal rule file! (*.py, *.yaml)")
@@ -102,7 +78,10 @@ def preprocess(opt):
 
     shared.config = opt.config_path
     if opt.config_path.endswith(".json"):
-        shared.log_path = "{}.logs".format(opt.config_path[:-5])
+        if opt.output == "":
+            shared.log_path = "{}.logs".format(opt.config_path[:-5])
+        else:
+            shared.log_path = "{}.logs".format(opt.output)
 
     shared.mode = shared.Mode.NORMAL
     if not opt.override and not opt.resume and os.path.exists(shared.log_path):

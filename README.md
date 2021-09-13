@@ -59,24 +59,54 @@ Try:
 
 You will get:
 
-![Result Extraction](sample_rule.png)
+```
+---  -----------------------------------------------------------------------------  ------------------  ----------------------
+idx  cmd                                                                            accuracy            loss
+0    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 1e-2 --decay 0.01   nan                 nan
+1    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 1e-2 --decay 0.001  0.969389853637771   0.018800431068203283
+2    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 1e-3 --decay 0.01   nan                 nan
+3    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 1e-3 --decay 0.001  nan                 nan
+4    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 5e-4 --decay 0.01   0.9953219531778092  0.0025735338086863013
+5    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 5e-4 --decay 0.001  0.9738390095674021  0.002672132175549624
+6    python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 1e-2 --decay 0.01    nan                 nan
+7    python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 1e-2 --decay 0.001   0.9976834837298412  0.0038932645925157106
+8    python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 1e-3 --decay 0.01    0.9737320897655711  0.0295369931044418
+9    python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 1e-3 --decay 0.001   0.9727926577331226  0.03280128785619396
+10   python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 5e-4 --decay 0.01    0.9950810301325252  0.00028976052740525837
+11   python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 5e-4 --decay 0.001   0.966193556539577   0.010192030493943904
+12   python main.py wmt14 --arch lstm --layer 2 --opt sgd --lr 1e-1                 nan                 nan
+13   python main.py wmt14 --arch lstm --layer 2 --opt adagrad --lr 1e-1             0.9991008494755877  0.00862301177187852
+14   python main.py wmt14 --arch cnn --layer 2 --opt sgd --lr 1e-1                  0.990682658916566   0.010620481443061158
+15   python main.py wmt14 --arch cnn --layer 2 --opt adagrad --lr 1e-1              nan                 nan
+---  -----------------------------------------------------------------------------  ------------------  ----------------------
+```
 
 You can even write a python function to extract the results.
 
 `manytasks show task --rule=rule.py`
 
+- Plotting Curves
 
+See `examples/python/analyze_log.ipynb` for details.
+
+<img src="sample_curve.png" alt="drawing"/>
 
 - Factor Analsis
 
-<!-- ![Factor Analysis](sample_factor.png) -->
+See `examples/python/analyze_log.ipynb` for details.
 
-<img src="sample_factor.png" alt="drawing" width="200"/>
+<!-- ![Factor Analysis](sample_analysis.png) -->
+
+<img src="sample_factor.png" alt="drawing"/>
 
 
 ## History
 
-**2021.6.20**
+**2021.9.13**, Small changes.
+- [x] Add support for specifying an output directory
+- [x] Add better support for log analysis.
+
+**2021.6.20**, Big changes.
 - [x] Deprecate support for WebUI.
 - [x] Add support for resuming from the last running status.
 - [x] Add support for factor analysis.

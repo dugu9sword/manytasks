@@ -1,6 +1,7 @@
 import re
 from collections import OrderedDict
 from typing import List
+import numpy as np
 
 from tabulate import tabulate
 
@@ -20,6 +21,9 @@ def show(log_path, extract_fn):
     ret = None
     for idx in tasks:
         ret = extract_fn(open("{}/task-{}.txt".format(log_path, idx)).readlines())
+        for key in ret:
+            if ret[key] is None:
+                ret[key] = np.nan
         table.append([idx, tasks[idx], *ret.values()])
     if ret:
         header.extend(list(ret.keys()))
