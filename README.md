@@ -1,6 +1,16 @@
 # Manytasks
 
-A tool for deploying many tasks automatically.
+A lightweight tool for deploying many tasks automatically, without any modification to your code.
+
+* [Manytasks](#manytasks)
+   * [Publications Using this Tool](#publications-using-this-tool)
+   * [Installation](#installation)
+   * [Quick Example](#quick-example)
+   * [Sample Configuration](#sample-configuration)
+   * [Advanced Usage](#advanced-usage)
+   * [Design Philosophy](#design-philosophy)
+   * [History](#history)
+
 
 ## Publications Using this Tool
 
@@ -10,6 +20,8 @@ A tool for deploying many tasks automatically.
 - **WMT 2021**: *The Volctrans Parallel Machine Translation System for WMT21 German-English News Translation Task*.
 - **EMNLP 2021**: *On the Transferability of Adversarial Attacks against Neural NLP Models*. 
 - **EMNLP 2021**: *Searching for an Effiective Defender: Benchmarking Defense against Adversarial Word Substitution*. 
+
+
 
 ## Installation
 
@@ -107,6 +119,22 @@ See `examples/python/analyze_log.ipynb` for details.
 <!-- ![Factor Analysis](sample_analysis.png) -->
 
 <img src="sample_factor.png" alt="drawing"/>
+
+## Design Philosophy
+
+**Q**: Why not use other open-source tools for hyper-parameter tuning, such as `optuna`, `hydra`, `wandb`?
+
+**A**: The first time I developed this tool is 2019-1-1, when most of those tools (except `optuna`) were **not born** yet. What's more, 
+
+- These tools are **heavy**, which means:
+    - You need to modify your code (add several lines of `import xxx; xxx.foo(); xxx.bar();`) to integrate their functionalities.
+    - You may have to replace your `print(...)` or `log(...)` function with theirs, sometimes your results may be logged to their server. 
+    - These tools are highly binded with `python`, which means they may fail if your code is written in `perl` (such as `mosetokenizer` in machine translation), `bash` (such as your code for preprocessing), etc.
+- `manytasks` is a lightweight tool which helps you deploy many tasks **without any modification** to your code, all logs will be saved in your machine.
+
+**Q**:When should you use other open-source tools for hyper-parameter tuning, such as `optuna`, `hydra`, `wandb`?
+
+**A**: For complex cases when you would like to enjoy their power of hyper-parameter tuning.
 
 
 ## History
