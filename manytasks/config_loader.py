@@ -1,5 +1,6 @@
 import multiprocessing
 from typing import List, Tuple
+import re
 
 import jstyleson
 import psutil
@@ -34,10 +35,10 @@ def gen_tasks(configs):
     task_list: List[Task] = []
     config_idx = [0 for _ in range(len(configs))]
     while config_idx is not None:
-        task: Task = []
+        args = []
         for i in range(len(configs)):
-            task.append(Arg(key=configs[i][0], value=str(configs[i][1][config_idx[i]])))
-        task_list.append(task)
+            args.append(Arg(key=configs[i][0], value=str(configs[i][1][config_idx[i]])))
+        task_list.append(Task(args))
         config_idx = next_config_idx(configs, config_idx)
     if len(set(map(tuple, task_list))) < len(task_list):
         print("Seems that some tasks shares the same args")
@@ -139,7 +140,23 @@ def load_config(path="sample_config.json"):
     else:
         for more_conf in more_confs:
             tasks.extend(gen_tasks(base_conf + more_conf))
+    reparse(tasks)
     shared.tasks = tasks
+
+
+def reparse(tasks: List[Task]):
+    for task in tasks:
+        for arg in task:
+            key, val = arg.key, arg.value
+            if val[0] == "<" and val[-1] == ">":
+                val = val[1:-1]
+                while True:
+                    found = re.search(r"\[[^]]*\]", val)
+                    if not found:
+                        break
+                    found_key = found.group()
+                    val = val.replace(found_key, task[found_key[1:-1]])
+                task[key] = val
 
 
 def read_from_console(prompt, default):

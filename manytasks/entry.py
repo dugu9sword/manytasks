@@ -33,17 +33,18 @@ def parse_opt():
 
     # run a config file
     run_mode = subparsers.add_parser("run")
-    run_mode.add_argument(               dest="config_path", action="store", default="", type=str,   help="Specify the config path")
-    run_mode.add_argument("--output",    dest="output",      action="store", default="", type=str,   help="Specify the output path")
-    run_mode.add_argument("--override",  dest="override",    action="store_true",                    help="Whether to force override existing logs")
-    run_mode.add_argument("--resume",    dest="resume",      action="store_true",                    help="Whether to resume from existing logs")
-    run_mode.add_argument("--random",    dest="random_exe",  action="store_true",                    help="Tasks are executed randomly")
-    run_mode.add_argument("--latency",   dest="latency",     action="store", default=1,  type=int,   help="Time (seconds) between execution of two tasks")
+    run_mode.add_argument(               dest="config_path", action="store", default="",   type=str,   help="Specify the config path")
+    run_mode.add_argument("--output",    dest="output",      action="store", default="",   type=str,   help="Specify the output path")
+    run_mode.add_argument("--override",  dest="override",    action="store_true",                      help="Whether to force override existing logs")
+    run_mode.add_argument("--resume",    dest="resume",      action="store_true",                      help="Whether to resume from existing logs")
+    run_mode.add_argument("--random",    dest="random_exe",  action="store_true",                      help="Tasks are executed randomly")
+    run_mode.add_argument("--latency",   dest="latency",     action="store", default=1,    type=int,   help="Time (seconds) between execution of two tasks")
+    run_mode.add_argument("--timeout",   dest="timeout",     action="store", default=None, type=str,   help="Timeout of a task (9S, 5m, 3H, 4d, etc.)")
 
     # show the result
     show_mode = subparsers.add_parser("show")
-    show_mode.add_argument(              dest='log_path',    action='store',                         help='Specify the log path')
-    show_mode.add_argument("--rule",     dest='rule',        action='store', default="",             help='Specify the extraction rule')
+    show_mode.add_argument(              dest='log_path',    action='store',                           help='Specify the log path')
+    show_mode.add_argument("--rule",     dest='rule',        action='store', default="",               help='Specify the extraction rule')
 
     opt = parser.parse_args()
     if opt.mode is None:
@@ -95,6 +96,20 @@ def preprocess(opt):
         else:
             print("ManyTasks Interupted.")
             exit()
+    
+    if opt.timeout is not None:
+        timeout_num = int(opt.timeout[:-1])
+        timeout_unit = opt.timeout[-1]
+        if timeout_unit in "Ss":
+            opt.timeout = (timeout_num, timeout_unit == "S")
+        elif timeout_unit in "Mm":
+            opt.timeout = (timeout_num * 60, timeout_unit == "M")
+        elif timeout_unit in "Hh":
+            opt.timeout = (timeout_num * 3600, timeout_unit == "H")     
+        elif timeout_unit in "Dd":
+            opt.timeout = (timeout_num * 3600 * 24, timeout_unit == "D")
+        else:
+            raise Exception
 
     if shared.mode == shared.Mode.OVERRIDE:
         for p in Path(shared.log_path).glob("task-*.txt"):
@@ -104,7 +119,6 @@ def preprocess(opt):
                log_path=shared.log_path,
                append=shared.mode == shared.Mode.RESUME)
     load_config(opt.config_path)
-    shared.task_status = ["pending"] * len(shared.tasks)
     for cuda_id in shared.cuda:
         cuda_manager.cuda_num[cuda_id] = 0
 
@@ -121,7 +135,7 @@ def preprocess(opt):
                     task_idx = int(found.group(1))
                     task_ret = int(found.group(3))
                     if int(task_ret) == 0:
-                        shared.task_status[task_idx] = shared.Status.SUCCESS
+                        shared.tasks[task_idx].status = shared.Status.SUCCESS
 
 
 def start_execution(opt):
@@ -138,20 +152,19 @@ def start_execution(opt):
         for idx in exe_order:
             # In some cases, not all tasks are fired.
             # Do not know why, but sleep(1) will work.
-            if shared.task_status[idx] != shared.Status.SUCCESS:
+            if shared.tasks[idx].status != shared.Status.SUCCESS:
                 futures.append(
-                    pool.submit(run_task, shared.executor, shared.tasks[idx]))
-                sleep(opt.latency)
+                    pool.submit(run_task, shared.executor, shared.tasks[idx], opt.latency, opt.timeout))
         while True:
             done_num = 0
             for task_id, future in enumerate(futures):
                 if future.running():
-                    shared.task_status[task_id] = shared.Status.RUNNING
+                    shared.tasks[task_id].status = shared.Status.RUNNING
                 if future.done():
                     if future.result() == 0:
-                        shared.task_status[task_id] = shared.Status.SUCCESS
+                        shared.tasks[task_id].status = shared.Status.SUCCESS
                     else:
-                        shared.task_status[task_id] = shared.Status.FAILED
+                        shared.tasks[task_id].status = shared.Status.FAILED
                     done_num += 1
             time.sleep(5)
             if done_num == len(futures):

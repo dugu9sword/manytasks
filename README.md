@@ -139,16 +139,26 @@ See `examples/python/analyze_log.ipynb` for details.
 
 ## History
 
+**2021.9.26**, Big changes.
+
+- [x] Code refactoring.
+- [x] Add support for setting timeout for each task.
+- [x] Add support for arg reference.
+- [x] Add support for showing PID of a task.
+
 **2021.9.13**, Small changes.
-- [x] Add support for specifying an output directory
+
+- [x] Add support for specifying an output directory.
 - [x] Add better support for log analysis.
 
 **2021.6.20**, Big changes.
+
 - [x] Deprecate support for WebUI.
 - [x] Add support for resuming from the last running status.
 - [x] Add support for factor analysis.
 
 **2021.5.26**, Small changes.
+
 - [x] Add support for yaml rule & Deprecate support for json rule (regex in json is not readable)
 
 **2021.3.16**, Small changes.
