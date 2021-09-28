@@ -1,6 +1,7 @@
 import os
 import subprocess
 import time
+from collections import defaultdict
 
 from manytasks import cuda_manager, shared
 from manytasks.shared import Task
@@ -27,7 +28,8 @@ def run_task(executor, task: Task, latency=None, timeout=None):
         callee = executor.split(" ")
         callee.extend(task.to_callable_args())
 
-        task_info = "TASK {}/{}".format(shared.tasks.index(task), len(shared.tasks))
+        width = len(shared.tasks) % 10
+        task_info = "TASK {:>{width}}/{:>{width}}".format(shared.tasks.index(task), len(shared.tasks), width=width)
 
         # process starting...
         p = subprocess.Popen(callee, stdout=output, stderr=output, env=env)
@@ -51,12 +53,12 @@ def run_task(executor, task: Task, latency=None, timeout=None):
                 if timeout_as_success:
                     ret = 0
                 else:
-                    ret = "TIMEOUT"
+                    ret = -1926
         cuda_status = "| CUDA {}".format(cuda_idx) if cuda_idx != -1 else ""
         ret_status = "| RET {}".format(ret)
         status = "FINISH {} {} {}".format(task_info, cuda_status, ret_status)
         log("{} [{}] {} : {}".format(
-            "✅" if ret == 0 else "❌",
+            defaultdict(lambda: "❌", {0: "✅", -1926: "🐸"})[ret],
             current_time(),
             format_status(status, cuda_idx),
             task.to_finalized_cmd()))

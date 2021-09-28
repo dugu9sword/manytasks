@@ -1,6 +1,6 @@
 accuracy:
   include: valid on 'valid' subset
-  regex: accuracy (\d*.\d*)
+  regex: bleu (\d*.\d*)
   reduce: max
 loss:
   include: valid on 'valid' subset

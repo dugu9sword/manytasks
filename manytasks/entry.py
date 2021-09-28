@@ -84,8 +84,12 @@ def preprocess(opt):
         else:
             shared.log_path = "{}.logs".format(opt.output)
 
-    shared.mode = shared.Mode.NORMAL
-    if not opt.override and not opt.resume and os.path.exists(shared.log_path):
+    assert not (opt.resume and opt.override), "--resume and --override should not be set at the same time!"
+    if opt.resume:
+        shared.mode = shared.Mode.RESUME
+    elif opt.override:
+        shared.mode = shared.Mode.OVERRIDE
+    elif (not opt.override) and (not opt.resume) and os.path.exists(shared.log_path):
         act = input(
             "Logs for config {} exists, [o]verride or [r]esume (if possible)? "
             .format(opt.config_path))
@@ -96,6 +100,8 @@ def preprocess(opt):
         else:
             print("ManyTasks Interupted.")
             exit()
+    else:
+        shared.mode = shared.Mode.NORMAL
     
     if opt.timeout is not None:
         timeout_num = int(opt.timeout[:-1])
@@ -130,7 +136,7 @@ def preprocess(opt):
                 continue
             if is_task_status_line:
                 found = re.search(
-                    r"FINISH TASK (\d+)/(\d+)\s+\|\s+RETURN\s+(-?\d+)", line)
+                    r"FINISH TASK (\d+)/(\d+)\s+\|\s+RET\s+(-?\d+)", line)
                 if found:
                     task_idx = int(found.group(1))
                     task_ret = int(found.group(3))
