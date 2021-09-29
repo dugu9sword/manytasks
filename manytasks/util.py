@@ -1,6 +1,8 @@
 import os
 import time
 
+import jstyleson
+import yaml
 from tabulate import tabulate
 
 from manytasks.shared import TaskPool
@@ -55,3 +57,46 @@ def show_task_list():
         table.append([idx] + values)
     log(tabulate(table))
     log()
+
+
+def read_from_console(prompt, default):
+    ret = input("{} (default: {}) :".format(prompt, default)).strip()
+    if ret == "":
+        ret = default
+    return ret
+
+
+def init_config():
+    path = read_from_console("Input the config name", "config")
+    jstyleson.dump(
+        {
+            "executor": "python main.py",
+            "cuda": [-1],
+            "concurrency": 1,
+            "configs": {
+                "==base==": [],
+                "==more==": []
+            }
+        }, open("{}.json".format(path), "w"), indent=4)
+
+
+def init_rule():
+    path = read_from_console("Input the rule name", "rule")
+    yaml.dump(
+        {
+            "accuracy":{
+                "filter": {
+                    "include": "words must be included",
+                },
+                "pattern": "accuracy <FLOAT>",
+                "reduce": "max"
+            },
+            "loss":{
+                "filter": {
+                    "exclude": "words must be excluded"
+                },
+                "pattern": "loss <FLOAT>",
+                "reduce": "min"
+            }
+        }, open("{}.yaml".format(path), "w"), indent=4
+    )

@@ -9,27 +9,6 @@ import psutil
 from manytasks.shared import Arg, Settings, Task, TaskPool
 
 
-def read_from_console(prompt, default):
-    ret = input("{} (default: {}) :".format(prompt, default)).strip()
-    if ret == "":
-        ret = default
-    return ret
-
-
-def init_config():
-    path = read_from_console("Input the config name", "config")
-    jstyleson.dump(
-        {
-            "executor": "python main.py",
-            "cuda": [-1],
-            "concurrency": 1,
-            "configs": {
-                "==base==": [],
-                "==more==": []
-            }
-        }, open("{}.json".format(path), "w"), indent=4)
-
-
 def check_key(ele):
     if isinstance(ele, str) and ele.startswith("-"):
         try:

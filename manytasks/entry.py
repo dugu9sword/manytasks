@@ -1,25 +1,24 @@
-import importlib
 import os
 import re
-import sys
+import shutil
 from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor
-from functools import partial
 from pathlib import Path
 
 import yaml
 
 from manytasks import cuda_manager
-from manytasks.config_loader import init_config, load_config
-from manytasks.extraction import extract_by_regex, extract_last_line, show
+from manytasks.config_loader import load_config
+from manytasks.extraction import show
 from manytasks.shared import Mode, Settings, Status, TaskPool
 from manytasks.task_runner import run_task
-from manytasks.util import draw_logo, log, log_config, show_task_list
+from manytasks.util import (draw_logo, init_config, init_rule, log, log_config,
+                            show_task_list)
 
 
 def parse_opt():
     usage = "You must specify a command, e.g. :\n" + \
-        "\t1. Run `manytasks init` to create a config\n" + \
+        "\t1. Run `manytasks init` to create a config/rule\n" + \
         "\t2. Run `manytasks run -h` to see how to run tasks\n" + \
         "\t3. Run `manytasks show -h` to see how to extract the results of tasks"
 
@@ -28,7 +27,8 @@ def parse_opt():
 
     # create a config file
     init_mode = subparsers.add_parser("init")
-
+    init_mode.add_argument(              dest="template",    action="store", default="",   type=str,   help="Generate a template file")
+    
     # run a config file
     run_mode = subparsers.add_parser("run")
     run_mode.add_argument(               dest="config_path", action="store", default="",   type=str,   help="Specify the config path")
@@ -42,28 +42,30 @@ def parse_opt():
     # show the result
     show_mode = subparsers.add_parser("show")
     show_mode.add_argument(              dest='log_path',    action='store',                           help='Specify the log path')
-    show_mode.add_argument("--rule",     dest='rule',        action='store', default="",               help='Specify the extraction rule')
+    show_mode.add_argument("--rule",     dest='rule_path',   action='store', default="",               help='Specify the extraction rule')
 
     opt = parser.parse_args()
     if opt.mode is None:
         print(usage)
         exit()
     elif opt.mode == "init":
-        init_config()
+        if opt.template == "config":
+            init_config()
+        elif opt.template == "rule":
+            init_rule()
+        else:
+            print(usage)
         exit()
     elif opt.mode == 'show':
         if ".logs" not in opt.log_path:
             opt.log_path += '.logs'
-        if opt.rule == "":
-            show(opt.log_path, extract_fn=extract_last_line)
-        elif opt.rule.endswith(".yaml"):
-            show(opt.log_path, extract_fn=partial(extract_by_regex, yaml.safe_load(open(opt.rule))))
-        elif opt.rule.endswith(".py"):
-            sys.path.append(".")
-            extract_fn = getattr(importlib.import_module(opt.rule[:-3]), "extract")
-            show(opt.log_path, extract_fn=extract_fn)
-        else:
-            print("you must specify a legal rule file! (*.py, *.yaml)")
+        load_config(os.path.join(opt.log_path, "config.json"))
+        if not opt.rule_path.endswith(".yaml"):
+            opt.rule_path += '.yaml'
+        if not os.path.exists(opt.rule_path):
+            print("you must specify a legal rule file! (*.yaml)")
+            exit()
+        show(opt.log_path, regex_rule=yaml.safe_load(open(opt.rule_path)))
         exit()
     return opt
 
@@ -101,7 +103,9 @@ def preprocess(opt):
             exit()
     else:
         settings.mode = Mode.NORMAL
-    
+
+    shutil.copy(opt.config_path, os.path.join(settings.log_path, "config.json"))
+
     if opt.timeout is not None:
         timeout_num = int(opt.timeout[:-1])
         timeout_unit = opt.timeout[-1]
