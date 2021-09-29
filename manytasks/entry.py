@@ -1,20 +1,18 @@
 import importlib
 import os
-import random
 import re
 import sys
-import time
 from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
-from time import sleep
 
 import yaml
 
-from manytasks import cuda_manager, shared
+from manytasks import cuda_manager
 from manytasks.config_loader import init_config, load_config
 from manytasks.extraction import extract_by_regex, extract_last_line, show
+from manytasks.shared import Mode, Settings, Status, TaskPool
 from manytasks.task_runner import run_task
 from manytasks.util import draw_logo, log, log_config, show_task_list
 
@@ -71,37 +69,38 @@ def parse_opt():
 
 
 def preprocess(opt):
+    settings = Settings()
     if not opt.config_path.endswith(".json"):
         opt.config_path += '.json'
     if not os.path.exists(opt.config_path):
         print("Config file {} not found.".format(opt.config_path))
         exit()
 
-    shared.config = opt.config_path
+    settings.config = opt.config_path
     if opt.config_path.endswith(".json"):
         if opt.output == "":
-            shared.log_path = "{}.logs".format(opt.config_path[:-5])
+            settings.log_path = "{}.logs".format(opt.config_path[:-5])
         else:
-            shared.log_path = "{}.logs".format(opt.output)
+            settings.log_path = "{}.logs".format(opt.output)
 
     assert not (opt.resume and opt.override), "--resume and --override should not be set at the same time!"
     if opt.resume:
-        shared.mode = shared.Mode.RESUME
+        settings.mode = Mode.RESUME
     elif opt.override:
-        shared.mode = shared.Mode.OVERRIDE
-    elif (not opt.override) and (not opt.resume) and os.path.exists(shared.log_path):
+        settings.mode = Mode.OVERRIDE
+    elif (not opt.override) and (not opt.resume) and os.path.exists(settings.log_path):
         act = input(
             "Logs for config {} exists, [o]verride or [r]esume (if possible)? "
             .format(opt.config_path))
         if act == "o":
-            shared.mode = shared.Mode.OVERRIDE
+            settings.mode = Mode.OVERRIDE
         elif act == "r":
-            shared.mode = shared.Mode.RESUME
+            settings.mode = Mode.RESUME
         else:
             print("ManyTasks Interupted.")
             exit()
     else:
-        shared.mode = shared.Mode.NORMAL
+        settings.mode = Mode.NORMAL
     
     if opt.timeout is not None:
         timeout_num = int(opt.timeout[:-1])
@@ -117,62 +116,71 @@ def preprocess(opt):
         else:
             raise Exception
 
-    if shared.mode == shared.Mode.OVERRIDE:
-        for p in Path(shared.log_path).glob("task-*.txt"):
+    if settings.mode == Mode.OVERRIDE:
+        for p in Path(settings.log_path).glob("task-*.txt"):
             p.unlink()
 
     log_config("status",
-               log_path=shared.log_path,
-               append=shared.mode == shared.Mode.RESUME)
+               log_path=settings.log_path,
+               append=settings.mode == Mode.RESUME)
     load_config(opt.config_path)
-    for cuda_id in shared.cuda:
+    for cuda_id in settings.cuda:
         cuda_manager.cuda_num[cuda_id] = 0
 
-    if shared.mode == shared.Mode.RESUME:
+    taskpool = TaskPool()
+    if settings.mode == Mode.RESUME:
         is_task_status_line = False
-        for line in open(Path(shared.log_path) / "status.txt"):
+        for line in open(Path(settings.log_path) / "status.txt"):
             if ">>>>>> Start execution..." in line:
                 is_task_status_line = True
                 continue
             if is_task_status_line:
-                found = re.search(
-                    r"FINISH TASK (\d+)/(\d+)\s+\|\s+RET\s+(-?\d+)", line)
+                found = re.search(r"FINISH TASK\s*(\d+)/(\d+)\s*\|\s*RET\s*(-?\d+)", line)
                 if found:
                     task_idx = int(found.group(1))
                     task_ret = int(found.group(3))
                     if int(task_ret) == 0:
-                        shared.tasks[task_idx].status = shared.Status.SUCCESS
+                        taskpool[task_idx].status = Status.SUCCESS
 
 
 def start_execution(opt):
-    # Start Execution
-    exe_order = list(range(len(shared.tasks)))
+    taskpool = TaskPool()
+    settings = Settings()
     if opt.random_exe:
-        random.shuffle(exe_order)
-    if shared.mode == shared.Mode.RESUME:
+        taskpool.shuffle()
+    if settings.mode == Mode.RESUME:
         log(">>>>>> Resume execution...")
     else:
         log(">>>>>> Start execution...")
-    with ThreadPoolExecutor(max_workers=shared.concurrency) as pool:
+    with ThreadPoolExecutor(max_workers=settings.concurrency) as pool:
         futures = []
-        for idx in exe_order:
-            # In some cases, not all tasks are fired.
-            # Do not know why, but sleep(1) will work.
-            if shared.tasks[idx].status != shared.Status.SUCCESS:
+        # fill the pool with some tasks
+        while True:
+            if not taskpool.has_next() or len(futures) == settings.concurrency:
+                break
+            next_task = taskpool.get_next_task()
+            if next_task.status != Status.SUCCESS:
                 futures.append(
-                    pool.submit(run_task, shared.executor, shared.tasks[idx], opt.latency, opt.timeout))
+                    pool.submit(run_task, settings.executor, next_task, opt.latency, opt.timeout))
+
+        # add more tasks to the pool
         while True:
             done_num = 0
+            new_futures = []
             for task_id, future in enumerate(futures):
                 if future.running():
-                    shared.tasks[task_id].status = shared.Status.RUNNING
+                    taskpool[task_id].status = Status.RUNNING
                 if future.done():
                     if future.result() == 0:
-                        shared.tasks[task_id].status = shared.Status.SUCCESS
+                        taskpool[task_id].status = Status.SUCCESS
                     else:
-                        shared.tasks[task_id].status = shared.Status.FAILED
+                        taskpool[task_id].status = Status.FAILED
                     done_num += 1
-            time.sleep(5)
+                    if taskpool.has_next():
+                        next_task = taskpool.get_next_task()
+                        new_futures.append(pool.submit(run_task, settings.executor, next_task, opt.latency, opt.timeout))
+            futures.extend(new_futures)
+            # time.sleep(5)
             if done_num == len(futures):
                 break
 
@@ -180,9 +188,10 @@ def start_execution(opt):
 
 
 def main():
+    settings = Settings()
     opt = parse_opt()
     preprocess(opt)
-    if shared.mode != shared.Mode.RESUME:
+    if settings.mode != Mode.RESUME:
         draw_logo()
         show_task_list()
     start_execution(opt)

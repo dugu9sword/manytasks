@@ -3,23 +3,20 @@ import subprocess
 import time
 from collections import defaultdict
 
-from manytasks import cuda_manager, shared
-from manytasks.shared import Task
+from manytasks import cuda_manager
+from manytasks.shared import Settings, Task, TaskPool
 from manytasks.util import current_time, log
 
 
 def run_task(executor, task: Task, latency=None, timeout=None):
-    def format_status(status, cuda_idx):
-        if cuda_idx == -1:
-            return "{:<30}".format(status)
-        else:
-            return "{:<38}".format(status)
+    settings = Settings()
+    taskpool = TaskPool()
     
     if latency:
         time.sleep(latency)
 
     with open(
-            "{}/task-{}.txt".format(shared.log_path, shared.tasks.index(task)),
+            "{}/task-{}.txt".format(settings.log_path, taskpool.index(task)),
             'w') as output:
         cuda_idx = cuda_manager.acquire_cuda()
         env = os.environ.copy()
@@ -28,18 +25,18 @@ def run_task(executor, task: Task, latency=None, timeout=None):
         callee = executor.split(" ")
         callee.extend(task.to_callable_args())
 
-        width = len(shared.tasks) % 10
-        task_info = "TASK {:>{width}}/{:>{width}}".format(shared.tasks.index(task), len(shared.tasks), width=width)
+        width = len(taskpool) // 10 + 1
+        task_info = "TASK {:>{width}}/{:>{width}}".format(taskpool.index(task), len(taskpool), width=width)
 
         # process starting...
         p = subprocess.Popen(callee, stdout=output, stderr=output, env=env)
         cuda_status = "| CUDA {}".format(cuda_idx) if cuda_idx != -1 else ""
-        pid_status = "| PID {}".format(p.pid)
+        pid_status = "| PID {:<8}".format(p.pid)
         status = " START {} {} {}".format(task_info, cuda_status, pid_status)
         log("{} [{}] {} : {}".format(
             "👉",
             current_time(), 
-            format_status(status, cuda_idx),
+            status,
             task.to_finalized_cmd()))
 
         # process ending...
@@ -55,12 +52,12 @@ def run_task(executor, task: Task, latency=None, timeout=None):
                 else:
                     ret = -1926
         cuda_status = "| CUDA {}".format(cuda_idx) if cuda_idx != -1 else ""
-        ret_status = "| RET {}".format(ret)
+        ret_status = "| RET {:<8}".format(ret)
         status = "FINISH {} {} {}".format(task_info, cuda_status, ret_status)
         log("{} [{}] {} : {}".format(
             defaultdict(lambda: "❌", {0: "✅", -1926: "🐸"})[ret],
             current_time(),
-            format_status(status, cuda_idx),
+            status,
             task.to_finalized_cmd()))
 
         cuda_manager.release_cuda(cuda_idx)

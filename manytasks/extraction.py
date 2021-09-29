@@ -1,8 +1,8 @@
 import re
 from collections import OrderedDict
 from typing import List
-import numpy as np
 
+import numpy as np
 from tabulate import tabulate
 
 

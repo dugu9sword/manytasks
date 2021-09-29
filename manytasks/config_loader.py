@@ -1,49 +1,33 @@
+import itertools
 import multiprocessing
-from typing import List, Tuple
 import re
+from typing import List, Tuple
 
 import jstyleson
 import psutil
 
-from manytasks import shared
-from manytasks.shared import Arg, Task
+from manytasks.shared import Arg, Settings, Task, TaskPool
 
 
-def next_config_idx(configs, config_idx):
-    idx = -1
-    ret = list(config_idx)
-    while True:
-        if idx < -len(config_idx):
-            return None
-        ret[idx] += 1
-        if ret[idx] < len(configs[idx][1]):
-            return ret
-        else:
-            ret[idx] = 0
-            idx -= 1
+def read_from_console(prompt, default):
+    ret = input("{} (default: {}) :".format(prompt, default)).strip()
+    if ret == "":
+        ret = default
+    return ret
 
 
-def gen_tasks(configs):
-    tmp_configs = []
-    for i in range(len(configs)):
-        if not isinstance(configs[i][1], list):
-            tmp_configs.append((configs[i][0], [configs[i][1]]))
-        else:
-            tmp_configs.append((configs[i][0], configs[i][1]))
-    configs = tmp_configs
-
-    task_list: List[Task] = []
-    config_idx = [0 for _ in range(len(configs))]
-    while config_idx is not None:
-        args = []
-        for i in range(len(configs)):
-            args.append(Arg(key=configs[i][0], value=str(configs[i][1][config_idx[i]])))
-        task_list.append(Task(args))
-        config_idx = next_config_idx(configs, config_idx)
-    if len(set(map(tuple, task_list))) < len(task_list):
-        print("Seems that some tasks shares the same args")
-        exit()
-    return task_list
+def init_config():
+    path = read_from_console("Input the config name", "config")
+    jstyleson.dump(
+        {
+            "executor": "python main.py",
+            "cuda": [-1],
+            "concurrency": 1,
+            "configs": {
+                "==base==": [],
+                "==more==": []
+            }
+        }, open("{}.json".format(path), "w"), indent=4)
 
 
 def check_key(ele):
@@ -82,6 +66,7 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
                 else:
                     ret.append((next(nonekey), ele))
                 continue
+            # convert int/float to str, and pass it to the next `if` statement
             if isinstance(ele, int) or isinstance(ele, float):
                 ele = str(ele)
             if isinstance(ele, str) and ele != "":
@@ -98,53 +83,28 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
                         exit(1)
                     continue
                 if current_key:
-                    ret.append((current_key, ele))
+                    ret.append((current_key, [ele]))
                     current_key = None  
                 else:
-                    ret.append((next(nonekey), ele))
+                    ret.append((next(nonekey), [ele]))
     return ret
 
 
-def load_config(path="sample_config.json"):
-    config = jstyleson.load(fp=open(path))
-
-    shared.executor = config["executor"]
-    
-    cuda = config["cuda"]
-    if cuda == [] or cuda == -1:
-        cuda = [-1]
-    
-    if cuda[0] != -1 and psutil.WINDOWS:
-        print("CUDA shoule be -1 on windows")
-        exit()
-    shared.cuda = cuda
-    
-
-    concurrency = config["concurrency"]
-    if concurrency == "#CUDA":
-        if cuda[0] != -1:
-            concurrency = len(cuda)
-        else:
-            print("You must specify which CUDA devices you want to use if concurrency is set to #CUDA.")
-    elif concurrency == "#CPU":
-        concurrency = max(1, multiprocessing.cpu_count() - 1)
-    else:
-        concurrency = int(concurrency)
-    shared.concurrency = concurrency
-    
-    base_conf = parse_config(config["configs"]["==base=="])
-    more_confs = list(map(parse_config, config["configs"]["==more=="]))
-    tasks = []
-    if len(more_confs) == 0:
-        tasks.extend(gen_tasks(base_conf))
-    else:
-        for more_conf in more_confs:
-            tasks.extend(gen_tasks(base_conf + more_conf))
-    reparse(tasks)
-    shared.tasks = tasks
+def config_to_tasks(configs):
+    ret = []
+    # [(k1, [v1, v2]), (k2, [v1])] -> [[(k1, v1), (k1, v2])], [(k2, v1)]]
+    expand_configs = []
+    for conf in configs:
+        expand_configs.append([(conf[0], ele) for ele in conf[1]])
+    for arg_list in itertools.product(*expand_configs):
+        args = []
+        for arg in arg_list:
+            args.append(Arg(key=arg[0], value=str(arg[1])))
+        ret.append(Task(args))
+    return ret
 
 
-def reparse(tasks: List[Task]):
+def apply_arg_reference(tasks: List[Task]):
     for task in tasks:
         for arg in task:
             key, val = arg.key, arg.value
@@ -159,21 +119,39 @@ def reparse(tasks: List[Task]):
                 task[key] = val
 
 
-def read_from_console(prompt, default):
-    ret = input("{} (default: {}) :".format(prompt, default)).strip()
-    if ret == "":
-        ret = default
-    return ret
+def load_config(path="sample_config.json"):
+    settings = Settings()
+    config = jstyleson.load(fp=open(path))
 
-def init_config():
-    path = read_from_console("Input the config name", "config")
-    jstyleson.dump(
-        {
-            "executor": "python main.py",
-            "cuda": [-1],
-            "concurrency": 1,
-            "configs": {
-                "==base==": [],
-                "==more==": []
-            }
-        }, open("{}.json".format(path), "w"), indent=4)
+    settings.executor = config["executor"]
+    
+    cuda = config["cuda"]
+    if cuda == [] or cuda == -1:
+        cuda = [-1]
+    if cuda[0] != -1 and psutil.WINDOWS:
+        print("CUDA shoule be -1 on windows")
+        exit()
+    settings.cuda = cuda
+    
+    concurrency = config["concurrency"]
+    if concurrency == "#CUDA":
+        if cuda[0] != -1:
+            concurrency = len(cuda)
+        else:
+            print("You must specify which CUDA devices you want to use if concurrency is set to #CUDA.")
+    elif concurrency == "#CPU":
+        concurrency = max(1, multiprocessing.cpu_count() - 1)
+    else:
+        concurrency = int(concurrency)
+    settings.concurrency = concurrency
+    
+    # generating all tasks
+    base_conf = parse_config(config["configs"]["==base=="])
+    more_confs = list(map(parse_config, config["configs"]["==more=="]))
+    if len(more_confs) == 0:
+        more_confs = [[]]
+    tasks = []
+    for more_conf in more_confs:
+        tasks.extend(config_to_tasks(base_conf + more_conf))
+    apply_arg_reference(tasks)
+    TaskPool().set_tasks(tasks)

@@ -1,10 +1,28 @@
+import random
+from functools import wraps
 from typing import List
+
+
+def singleton(cls):
+    instances = {}
+
+    @wraps(cls)
+    def getinstance(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+
+    return getinstance
+
 
 # Definition
 class Arg:
     def __init__(self, key, value) -> None:
         self.key: str = key
         self.value = value
+
+    def __repr__(self) -> str:
+        return "Arg({}={})".format(self.key, self.value)
 
 
 class Task:
@@ -39,7 +57,7 @@ class Task:
         return iter(self.args)
 
     def __repr__(self):
-        return f"Task(Arg={self.to_finalized_args()}, Status={self.status})"
+        return "Task(Arg={}, Status={})".format(self.to_finalized_args(), self.status)
 
     def to_callable_args(self):
         """
@@ -64,7 +82,7 @@ class Task:
         """
             Return: "python3 script.py arg0 --key1 arg1 --key2 --arg2"
         """
-        return executor + " " + self.to_finalized_args()
+        return Settings().executor + " " + self.to_finalized_args()
 
 class Mode:
     NORMAL   = "NORMAL"
@@ -78,11 +96,67 @@ class Status:
     RUNNING  = "RUNNING"
 
 
-# Variables
-mode = "<mode>"
-config_name = "<config>"
-log_path = "<path>"
-executor = "<python>"
-cuda = [0, 1, 2]
-concurrency = -1
-tasks: List[Task] = []
+@singleton
+class Settings:
+    def __init__(self) -> None:
+        self.mode = "<mode>"
+        self.config_name = "<config>"
+        self.log_path = "<path>"
+        self.executor = "<python>"
+        self.cuda = [0, 1, 2]
+        self.concurrency = -1
+
+@singleton
+class TaskPool:
+    def __init__(self):
+        # information
+        self._tasks: List[Task]
+        self._keys: List[str]
+
+        # execution order
+        self._order : List[int]
+        self._next_order_idx : int
+        
+
+    def set_tasks(self, tasks: List[Task]):
+        self._tasks = tasks
+        self._keys = []
+        for task in self._tasks:
+            for arg in task:
+                if arg.key not in self._keys:
+                    self._keys.append(arg.key)
+
+        self._order = list(range(len(tasks)))
+        self._next_order_idx = 0
+        
+
+    @property
+    def keys(self):
+        return self._keys
+
+    def index(self, task):
+        return self._tasks.index(task)
+
+    def __iter__(self):
+        return iter(self._tasks)
+
+    def __len__(self):
+        return len(self._tasks)
+
+    def __getitem__(self, index):
+        return self._tasks[index]
+
+    def has_next(self):
+        return self._next_order_idx + 1 != len(self._order)
+
+    def get_next_task(self):
+        ret = self._tasks[self._order[self._next_order_idx]]
+        self._next_order_idx += 1
+        return ret
+
+    def shuffle(self, start=0, stop=None):
+        i = start
+        while (i < stop-1):
+            idx = random.randrange(i, stop)
+            self._order[i], self._order[idx] = self._order[idx], self._order[i]
+            i += 1

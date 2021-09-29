@@ -3,7 +3,7 @@ import time
 
 from tabulate import tabulate
 
-from manytasks import shared
+from manytasks.shared import TaskPool
 
 
 def log(*info, target='cf'):
@@ -41,25 +41,16 @@ def draw_logo():
     """)
 
 def show_task_list():
+    taskpool = TaskPool()
     log(">>>>>> Show the task list...")
-    keys = []
-    for task in shared.tasks:
-        for arg in task:
-            if arg.key not in keys:
-                keys.append(arg.key)
-
-    header = ['idx'] + keys
+    header = ['idx'] + taskpool.keys
     table = [header]
-    for idx, task in enumerate(shared.tasks):
+    for idx, task in enumerate(taskpool):
         values = []
-        for key in keys:
-            found = False
-            for arg in task:
-                if arg.key == key:
-                    found = True
-                    values.append(arg.value)
-                    break
-            if not found:
+        for key in taskpool.keys:
+            if key in task.keys:
+                values.append(task[key])
+            else:
                 values.append("-")
         table.append([idx] + values)
     log(tabulate(table))
