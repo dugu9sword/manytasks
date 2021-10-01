@@ -1,8 +1,9 @@
 import os
 import re
-from typing import List
+from typing import Callable, Dict, Iterable, List
 
 import numpy as np
+
 from tabulate import tabulate
 
 from manytasks.shared import TaskPool
@@ -12,17 +13,23 @@ from manytasks.shared import TaskPool
 def include_filter(key):
     def _check(line):
         return key in line
+
     return _check
+
 
 def exclude_filter(key):
     def _check(line):
         return key not in line
+
     return _check
+
 
 def startswith_filter(key):
     def _check(line):
         return line.startswith(key)
+
     return _check
+
 
 FILTERS = {
     "include": include_filter,
@@ -30,29 +37,34 @@ FILTERS = {
     "startswith": startswith_filter
 }
 
-# Predefined patterns    
+# Predefined patterns
 PATTERNS = {
-    "INT":          r"([-]\d+)",
-    "FLOAT":        r"([-]*\d+\.\d+)",
-    "BEFORE_COMMA": r"([^,]+),"   
+    "INT": r"([-]*\d+)",
+    "FLOAT": r"([-]*\d+\.\d+)",
+    "BEFORE_COMMA": r"([^,]+),"
 }
-
 
 # Predefined reduction functions
-REDUCE = {
-    "max": max,
-    "min": min,
-    "sum": sum,
-    "last": lambda x: x[-1]
-}
+REDUCE_FNS = {"max": max, "min": min, "sum": sum, "last": lambda x: x[-1]}
 
-def extract(lines, filters=[], patterns={}):
+
+def extract(
+        lines: Iterable,
+        filters: List[Callable] = [],
+        patterns: Dict[str, Callable] = {},
+        reduce_fns: Dict[str, Callable] = {}
+    ):
     """
+        Only lines which contains *all keys* in the patterns will be considered.
+
         Input:
-            lines:    an iterable containing many strings
-            filters:  a list of filters which removes useless lines
-            patterns: 
+            lines:     an iterable containing many strings
+            filters:   a list of filters which removes useless lines
+            patterns:
                 { key1: pattern extractor 1, key2: pattern extractor 2, ... }
+            reduce_fns:
+                { key1: reduce function 1, key2: reduce function 2, ... }
+                
         Returns:
                 { key1: extracted values 1,  key2: extracted values 2, ... }
     """
@@ -76,47 +88,52 @@ def extract(lines, filters=[], patterns={}):
         if found_num == len(patterns):
             for k in ret:
                 ret[k].append(line_result[k])
+    if len(reduce_fns) != 0:
+        for k in ret:
+            if len(ret[k]) == 0:
+                ret[k] = np.nan
+            else:
+                ret[k] = reduce_fns[k](ret[k])
     return ret
 
-def extract_by_regex_rule(regex_rule, text: List[str]):
-    ret = {}
-    for k, v in regex_rule.items():
-        # set filters
-        filters = []
-        if "filter" in v:
-            for fk, fv in v["filter"].items():
-                filters.append(FILTERS[fk](fv))
-        
-        # set pattern
-        pattern = v["pattern"]
-        for pk in PATTERNS:
-            if "<{}>".format(pk) in pattern:
-                pattern = pattern.replace("<{}>".format(pk), PATTERNS[pk])
-        
-        result = extract(text, filters=filters, patterns={k: pattern})
-        
-        # set reduction function
-        reduce_fn = REDUCE[v["reduce"]]
-        if len(result[k]) == 0:
-            ret[k] = np.nan
-        else:
-            ret[k] = reduce_fn(result[k])   
-    return ret
 
 def show(log_path, regex_rule):
     taskpool = TaskPool()
     table = []
     header = ["idx", "cmd"]
-    ret = None
     for idx, task in enumerate(taskpool):
         task_log = "{}/task-{}.txt".format(log_path, idx)
         if os.path.exists(task_log):
-            ret = extract_by_regex_rule(regex_rule, open(task_log).readlines())
-            table.append([idx, task.to_finalized_cmd(), *ret.values()])
-    if ret:
-        header.extend(list(ret.keys()))
-        table.insert(0, header)
-    result = tabulate(table, floatfmt=".3f")
-    f = open("{}/result.txt".format(log_path), "w")
+            text = open(task_log).readlines()
+            extracted = {}
+            for k, v in regex_rule.items():
+                # set filters
+                filters = []
+                if "filter" in v:
+                    for fk, fv in v["filter"].items():
+                        filters.append(FILTERS[fk](fv))
+
+                # set pattern
+                pattern = v["pattern"]
+                for pk in PATTERNS:
+                    if "<{}>".format(pk) in pattern:
+                        pattern = pattern.replace("<{}>".format(pk),
+                                                  PATTERNS[pk])
+
+                # set reduction function
+                reduce_fn = REDUCE_FNS[v["reduce"]]
+
+                result = extract(text,
+                    filters=filters,
+                    patterns={k: pattern},
+                    reduce_fns={k: reduce_fn}
+                )
+                
+                extracted[k] = result[k]
+
+            table.append([idx, task.to_finalized_cmd(), *extracted.values()])
+    header.extend(list(regex_rule.keys()))
+    result = tabulate(table, headers=header, floatfmt=".4f")
     print(result)
+    f = open("{}/result.txt".format(log_path), "w")
     print(result, file=f)
