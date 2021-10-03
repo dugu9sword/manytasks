@@ -5,7 +5,7 @@ import jstyleson
 import yaml
 from tabulate import tabulate
 
-from manytasks.shared import TaskPool
+from manytasks.defs import TaskPool
 
 
 def log(*info, target='cf'):
@@ -30,6 +30,7 @@ def log_config(filename, log_path, append=False):
 def current_time():
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
+
 def draw_logo():
     log("""
     =================================================================
@@ -42,8 +43,8 @@ def draw_logo():
     =================================================================
     """)
 
-def show_task_list():
-    taskpool = TaskPool()
+
+def show_task_list(taskpool: TaskPool):
     log(">>>>>> Show the task list...")
     header = ['idx'] + taskpool.keys
     table = [header]
@@ -66,6 +67,26 @@ def read_from_console(prompt, default):
     return ret
 
 
+def safe_append(a, b):
+    if not a.endswith(b):
+        return a + b
+    else:
+        return a
+
+
+def safe_cut(a, b):
+    if a.endswith(b):
+        return a[:-len(b)]
+    else:
+        return a
+
+
+def exists_fast_fail(p):
+    if not os.path.exists(p):
+        print("{} not exists!".format(p))
+        exit()
+
+
 def init_config():
     path = read_from_console("Input the config name", "config")
     jstyleson.dump(
@@ -77,26 +98,29 @@ def init_config():
                 "==base==": [],
                 "==more==": []
             }
-        }, open("{}.json".format(path), "w"), indent=4)
+        },
+        open("{}.json".format(path), "w"),
+        indent=4)
 
 
 def init_rule():
     path = read_from_console("Input the rule name", "rule")
     yaml.dump(
         {
-            "accuracy":{
+            "accuracy": {
                 "filter": {
                     "include": "words must be included",
                 },
                 "pattern": "accuracy <FLOAT>",
                 "reduce": "max"
             },
-            "loss":{
+            "loss": {
                 "filter": {
                     "exclude": "words must be excluded"
                 },
                 "pattern": "loss <FLOAT>",
                 "reduce": "min"
             }
-        }, open("{}.yaml".format(path), "w"), indent=4
-    )
+        },
+        open("{}.yaml".format(path), "w"),
+        indent=4)

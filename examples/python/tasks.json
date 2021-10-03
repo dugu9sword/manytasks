@@ -1,0 +1,32 @@
+{
+    "executor": "python main.py",
+    // When cuda is set to -1/[]/[-1], ManyTasks will not set 
+    // the environment variables CUDA_VISIBLE_DEVICES. 
+    "cuda": [-1],
+    // How many processes will be run in parallel?
+    //     - "#CPU" (number of CPUs)
+    //     - "#CUDA" (number of CUDA devices)
+    //     - an integer
+    "concurrency": "4",
+    "configs": {
+        "==base==": [
+            // You can pass an arg without a key
+            "wmt14", 
+            // You can pass a list
+            "--arch", ["lstm", "transformer"],
+            // You can even pass a python script which returns an iterable
+            "--layer", "{range(2, 6, 5)}"
+        ],
+        "==more==": [
+            [ 
+                "--opt", "adam",
+                "--lr", ["1e-2", "5e-4"],
+                "--decay", ["0.01"]
+            ],
+            [
+                "--opt", ["sgd", "adagrad"],
+                "--lr", ["1e-1"]
+            ]
+        ]
+    }
+}

@@ -1,18 +1,5 @@
 import random
-from functools import wraps
 from typing import List
-
-
-def singleton(cls):
-    instances = {}
-
-    @wraps(cls)
-    def getinstance(*args, **kwargs):
-        if cls not in instances:
-            instances[cls] = cls(*args, **kwargs)
-        return instances[cls]
-
-    return getinstance
 
 
 # Definition
@@ -26,7 +13,8 @@ class Arg:
 
 
 class Task:
-    def __init__(self, args) -> None:
+    def __init__(self, executor, args) -> None:
+        self.executor: List[str] = executor
         self.args: List[Arg] = args
         self.status = Status.PENDING
 
@@ -57,7 +45,8 @@ class Task:
         return iter(self.args)
 
     def __repr__(self):
-        return "Task(Arg={}, Status={})".format(self.to_finalized_args(), self.status)
+        return "Task(Arg={}, Status={})".format(self.to_finalized_args(),
+                                                self.status)
 
     def to_callable_args(self):
         """
@@ -71,7 +60,7 @@ class Task:
                 buff.append("{}".format(arg.key))
                 buff.append("{}".format(arg.value))
         return buff
-    
+
     def to_finalized_args(self):
         """
             Return: "arg0 --key1 arg1 --key2 --arg2"
@@ -82,31 +71,22 @@ class Task:
         """
             Return: "python3 script.py arg0 --key1 arg1 --key2 --arg2"
         """
-        return Settings().executor + " " + self.to_finalized_args()
+        return " ".join(self.executor) + " " + self.to_finalized_args()
+
 
 class Mode:
-    NORMAL   = "NORMAL"
+    NORMAL = "NORMAL"
     OVERRIDE = "OVERRIDE"
-    RESUME   = "RESUME"
+    RESUME = "RESUME"
+
 
 class Status:
-    SUCCESS  = "SUCCESS"
-    FAILED   = "FAILED"
-    PENDING  = "PENDING"
-    RUNNING  = "RUNNING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
 
 
-@singleton
-class Settings:
-    def __init__(self) -> None:
-        self.mode = "<mode>"
-        self.config_name = "<config>"
-        self.log_path = "<path>"
-        self.executor = "<python>"
-        self.cuda = [0, 1, 2]
-        self.concurrency = -1
-
-@singleton
 class TaskPool:
     def __init__(self):
         # information
@@ -114,9 +94,8 @@ class TaskPool:
         self._keys: List[str]
 
         # execution order
-        self._order : List[int]
-        self._next_order_idx : int
-        
+        self._order: List[int]
+        self._next_order_idx: int
 
     def set_tasks(self, tasks: List[Task]):
         self._tasks = tasks
@@ -128,7 +107,6 @@ class TaskPool:
 
         self._order = list(range(len(tasks)))
         self._next_order_idx = 0
-        
 
     @property
     def keys(self):
@@ -147,16 +125,25 @@ class TaskPool:
         return self._tasks[index]
 
     def has_next(self):
-        return self._next_order_idx + 1 != len(self._order)
+        return self._next_order_idx + 1 <= len(self._order)
 
     def get_next_task(self):
-        ret = self._tasks[self._order[self._next_order_idx]]
+        ret = self._order[self._next_order_idx], self._tasks[self._order[self._next_order_idx]]
         self._next_order_idx += 1
         return ret
 
     def shuffle(self, start=0, stop=None):
         i = start
-        while (i < stop-1):
+        if stop is None:
+            stop = len(self)
+        while (i < stop - 1):
             idx = random.randrange(i, stop)
             self._order[i], self._order[idx] = self._order[idx], self._order[i]
             i += 1
+
+    def __repr__(self) -> str:
+        ret = "TaskPool(\n"
+        for i, task in enumerate(self._tasks):
+            ret += "{:>4}.  ".format(i) + repr(task) + "\n"
+        ret += ")"
+        return ret

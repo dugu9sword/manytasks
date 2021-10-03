@@ -3,10 +3,9 @@ import re
 from typing import Callable, Dict, Iterable, List
 
 import numpy as np
-
 from tabulate import tabulate
 
-from manytasks.shared import TaskPool
+from manytasks.defs import TaskPool
 
 
 # Predefined filters
@@ -48,12 +47,10 @@ PATTERNS = {
 REDUCE_FNS = {"max": max, "min": min, "sum": sum, "last": lambda x: x[-1]}
 
 
-def extract(
-        lines: Iterable,
-        filters: List[Callable] = [],
-        patterns: Dict[str, Callable] = {},
-        reduce_fns: Dict[str, Callable] = {}
-    ):
+def extract(lines: Iterable,
+            filters: List[Callable] = [],
+            patterns: Dict[str, Callable] = {},
+            reduce_fns: Dict[str, Callable] = {}):
     """
         Only lines which contains *all keys* in the patterns will be considered.
 
@@ -97,12 +94,11 @@ def extract(
     return ret
 
 
-def show(log_path, regex_rule):
-    taskpool = TaskPool()
+def show(opt, taskpool: TaskPool, regex_rule):
     table = []
     header = ["idx", "cmd"]
     for idx, task in enumerate(taskpool):
-        task_log = "{}/task-{}.txt".format(log_path, idx)
+        task_log = "{}/task-{}.txt".format(opt.log_path, idx)
         if os.path.exists(task_log):
             text = open(task_log).readlines()
             extracted = {}
@@ -124,16 +120,15 @@ def show(log_path, regex_rule):
                 reduce_fn = REDUCE_FNS[v["reduce"]]
 
                 result = extract(text,
-                    filters=filters,
-                    patterns={k: pattern},
-                    reduce_fns={k: reduce_fn}
-                )
-                
+                                 filters=filters,
+                                 patterns={k: pattern},
+                                 reduce_fns={k: reduce_fn})
+
                 extracted[k] = result[k]
 
             table.append([idx, task.to_finalized_cmd(), *extracted.values()])
     header.extend(list(regex_rule.keys()))
     result = tabulate(table, headers=header, floatfmt=".4f")
     print(result)
-    f = open("{}/result.txt".format(log_path), "w")
+    f = open("{}/result.txt".format(opt.log_path), "w")
     print(result, file=f)

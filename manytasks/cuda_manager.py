@@ -13,8 +13,6 @@ def acquire_cuda():
             if cuda_num[cuda_idx] < min_cuda_task_num:
                 min_cuda_idx = cuda_idx
                 min_cuda_task_num = cuda_num[cuda_idx]
-        # log("Current CUDA usage {}, select {}".format(
-        #     cuda_num, min_cuda_idx))
         cuda_num[min_cuda_idx] += 1
     return min_cuda_idx
 

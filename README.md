@@ -17,7 +17,7 @@ A lightweight tool for deploying many tasks automatically, without any modificat
 - **Arxiv 2020**: *Chinese Named Entity Recognition Augmented with Lexicon Memory*. 
 - **ACL 2020**: *Evaluating and Enhancing the Robustness of Neural Network-based Dependency Parsing Models with Adversarial Examples*. 
 - **ACL 2021**: *Defense against Synonym Substitution-based Adversarial Attacks via Dirichlet Neighborhood Ensemble*.
-- **WMT 2021**: *The Volctrans Parallel Machine Translation System for WMT21 German-English News Translation Task*.
+- **WMT 2021**: *The Volctrans GLAT System: Non-autoregressive Translation Meets WMT21*.
 - **EMNLP 2021**: *On the Transferability of Adversarial Attacks against Neural NLP Models*. 
 - **EMNLP 2021**: *Searching for an Effiective Defender: Benchmarking Defense against Adversarial Word Substitution*. 
 
@@ -39,11 +39,11 @@ You can also install the package (**maybe outdated**) from pypi:
 ```
 cd examples/python
 
-# configuration is stored in task.json
-manytasks run task
+# configuration is stored in tasks.json
+manytasks run tasks
 ```
 
-All running logs are stored in `task.logs`. 
+All running logs are stored in `tasks.logs`. 
 
 - The running log of the manytasks is written into `task.logs/status.txt` 
 
@@ -76,35 +76,37 @@ You can extract results (`accuracy`, `F-1`, `BLEU`, etc. ) from generated logs b
 
 Try: 
 
-`manytasks show task --rule=rule.yaml`
+`manytasks show tasks --rule rule`
+
+where the `rule.yaml` looks like:
+
+```yaml
+bleu:
+  filters:
+    include: valid on 'valid' subset
+  pattern: bleu <FLOAT>
+  reduce: max
+loss:
+  filters:
+    include: valid on 'valid' subset
+  pattern: loss (\d*.\d*)
+  reduce: min
+```
 
 You will get:
 
 ```
----  -----------------------------------------------------------------------------  ------------------  ----------------------
-idx  cmd                                                                            accuracy            loss
-0    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 1e-2 --decay 0.01   nan                 nan
-1    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 1e-2 --decay 0.001  0.969389853637771   0.018800431068203283
-2    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 1e-3 --decay 0.01   nan                 nan
-3    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 1e-3 --decay 0.001  nan                 nan
-4    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 5e-4 --decay 0.01   0.9953219531778092  0.0025735338086863013
-5    python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 5e-4 --decay 0.001  0.9738390095674021  0.002672132175549624
-6    python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 1e-2 --decay 0.01    nan                 nan
-7    python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 1e-2 --decay 0.001   0.9976834837298412  0.0038932645925157106
-8    python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 1e-3 --decay 0.01    0.9737320897655711  0.0295369931044418
-9    python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 1e-3 --decay 0.001   0.9727926577331226  0.03280128785619396
-10   python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 5e-4 --decay 0.01    0.9950810301325252  0.00028976052740525837
-11   python main.py wmt14 --arch cnn --layer 2 --opt adam --lr 5e-4 --decay 0.001   0.966193556539577   0.010192030493943904
-12   python main.py wmt14 --arch lstm --layer 2 --opt sgd --lr 1e-1                 nan                 nan
-13   python main.py wmt14 --arch lstm --layer 2 --opt adagrad --lr 1e-1             0.9991008494755877  0.00862301177187852
-14   python main.py wmt14 --arch cnn --layer 2 --opt sgd --lr 1e-1                  0.990682658916566   0.010620481443061158
-15   python main.py wmt14 --arch cnn --layer 2 --opt adagrad --lr 1e-1              nan                 nan
----  -----------------------------------------------------------------------------  ------------------  ----------------------
+  idx  cmd                                                                                      bleu      loss
+-----  -----------------------------------------------------------------------------------  --------  --------
+    0  python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 1e-2 --decay 0.01         nan       nan
+    1  python main.py wmt14 --arch lstm --layer 2 --opt adam --lr 5e-4 --decay 0.01          25.2239    0.1586
+    2  python main.py wmt14 --arch transformer --layer 2 --opt adam --lr 1e-2 --decay 0.01   19.8578    0.3370
+    3  python main.py wmt14 --arch transformer --layer 2 --opt adam --lr 5e-4 --decay 0.01   21.1514    0.2932
+    4  python main.py wmt14 --arch lstm --layer 2 --opt sgd --lr 1e-1                       nan       nan
+    5  python main.py wmt14 --arch lstm --layer 2 --opt adagrad --lr 1e-1                    21.8467    0.2697
+    6  python main.py wmt14 --arch transformer --layer 2 --opt sgd --lr 1e-1                 16.8448    0.4381
+    7  python main.py wmt14 --arch transformer --layer 2 --opt adagrad --lr 1e-1             17.8604    0.4042
 ```
-
-You can even write a python function to extract the results.
-
-`manytasks show task --rule=rule.py`
 
 - Plotting Curves
 
@@ -115,8 +117,6 @@ See `examples/python/analyze_log.ipynb` for details.
 - Factor Analsis
 
 See `examples/python/analyze_log.ipynb` for details.
-
-<!-- ![Factor Analysis](sample_analysis.png) -->
 
 <img src="sample_factor.png" alt="drawing"/>
 
@@ -138,6 +138,13 @@ See `examples/python/analyze_log.ipynb` for details.
 
 
 ## History
+
+**2021.10.3**, Big changes. Code refactoring, the architecture changes a lot.
+
+- [x] Better support for log extraction with `yaml` rule file.
+- [x] Better support for log analysis with `extract()` from `manytasks.log_extractor`.
+- [x] Remove support for extracting results with python scripts.
+
 
 **2021.9.26**, Big changes.
 
