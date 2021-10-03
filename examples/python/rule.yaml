@@ -1,9 +1,11 @@
-accuracy:
-  include: valid on 'valid' subset
-  regex: bleu (\d*.\d*)
+bleu:
+  filters:
+    include: valid on 'valid' subset
+  pattern: bleu <FLOAT>
   reduce: max
 loss:
-  include: valid on 'valid' subset
-  regex: loss (\d*.\d*)
+  filters:
+    include: valid on 'valid' subset
+  pattern: loss (\d*.\d*)
   reduce: min
   

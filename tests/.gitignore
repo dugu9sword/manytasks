@@ -1,0 +1,6 @@
+*.logs/*
+*.log
+*.yaml
+*.json
+*.py
+*.ipynb

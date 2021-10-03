@@ -1,0 +1,18 @@
+{
+    "executor": "manytasks run",
+    "cuda": [
+        -1
+    ],
+    "concurrency": 1,
+    "configs": {
+        "==base==": [
+
+        ],
+        "==more==": [
+            ["../bash/tasks.json", "--log-path", "bash1"],
+            ["../bash/tasks.json", "--log-path", "bash2"],
+            ["../bash/tasks.json", "--log-path", "bash3"],
+            ["../bash/tasks.json", "--log-path", "bash4"],
+        ]
+    }
+}

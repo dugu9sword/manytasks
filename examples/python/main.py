@@ -70,4 +70,4 @@ for i in range(epochs):
     for j in range(batches):
         print(f"| train | epoch {i} batch {j} | training loss {loss(i)}")
     print(f"| valid | epoch {i} | valid on 'valid' subset | bleu {get_bleu(i)} loss {loss(i)} | cost 10 seconds")
-# time.sleep(3)
+time.sleep(3)
