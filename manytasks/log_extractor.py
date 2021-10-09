@@ -70,9 +70,13 @@ def extract(lines: Iterable,
         ret[k] = []
 
     for line in lines:
+        skip_this_line = False
         for check in filters:
             if not check(line):
+                skip_this_line = True
                 continue
+        if skip_this_line:
+            continue
         found_num = 0
         line_result = {}
         for k, pattern in patterns.items():
