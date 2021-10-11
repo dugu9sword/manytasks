@@ -18,35 +18,63 @@ from manytasks.util import (exists_fast_fail, init_config, init_rule,
 
 def parse_opt():
     # yapf: disable
-    usage = "You must specify a command, e.g. :\n" + \
-        "\t1. Run `manytasks init` to create a config/rule\n" + \
-        "\t2. Run `manytasks run -h` to see how to run tasks\n" + \
-        "\t3. Run `manytasks show -h` to see how to extract the results of tasks"
+    # usage = "You must specify a command, e.g. :\n" + \
+    #     "\t1. Run `manytasks init -h` to see how to create a config/rule\n" + \
+    #     "\t2. Run `manytasks run -h` to see how to run tasks\n" + \
+    #     "\t3. Run `manytasks show -h` to see how to extract the results of tasks"
 
-    parser = ArgumentParser(usage=usage)
+    parser = ArgumentParser()
     subparsers = parser.add_subparsers(dest="mode")
 
     # create a config/rule file
     init_mode = subparsers.add_parser("init")
-    init_mode.add_argument(              dest="template",    action="store", default="",   type=str,   help="Generate a template file")
+    init_mode.add_argument(              dest="template",    action="store", default="",   type=str,   choices=["config", "rule"],
+                            help="Generate a template file, `config` for running tasks and `rule` for log extraction.")
 
     # run a config file
     run_mode = subparsers.add_parser("run")
-    run_mode.add_argument(               dest="config_path", action="store", default="",   type=str,   help="Specify the config path")
-    run_mode.add_argument("--log-path",  dest="log_path",    action="store", default="",   type=str,   help="Specify the log path")
-    run_mode.add_argument("--override",  dest="override",    action="store_true",                      help="Whether to force override existing logs")
-    run_mode.add_argument("--resume",    dest="resume",      action="store_true",                      help="Whether to resume from existing logs")
-    run_mode.add_argument("--random-exe",dest="random_exe",  action="store_true",                      help="Tasks are executed randomly")
-    run_mode.add_argument("--latency",   dest="latency",     action="store", default=1,    type=int,   help="Time (seconds) between execution of two tasks")
-    run_mode.add_argument("--timeout",   dest="timeout",     action="store", default=None, type=str,   help="Timeout of a task (9S, 5m, 3H, 4d, etc.)")
+    run_mode.add_argument(               dest="config_path", action="store", default="",   type=str,   
+                            help="Specify the config path such as 'config_name.json', " 
+                                + "where the suffix '.json' can be omitted in case that it is in the current directory.")
+    run_mode.add_argument("--log-path",  dest="log_path",    action="store", default="",   type=str,   
+                            help="Specify the log path. " 
+                                + "The path will be 'config_name.logs' in case that it is not specified.")
+    run_mode.add_argument("--override",  dest="override",    action="store_true",                      
+                            help="Whether to force override existing logs. ")
+    run_mode.add_argument("--resume",    dest="resume",      action="store_true",                      
+                            help="Whether to resume from existing logs. "
+                                + "Only tasks that are failed will be runned again.")
+    run_mode.add_argument("--random-exe",dest="random_exe",  action="store_true",                      
+                            help="Whether tasks are executed randomly. ")
+    run_mode.add_argument("--latency",   dest="latency",     action="store", default=1,    type=int,   
+                            help="Time (seconds) between execution of two tasks ." 
+                                + "This can be useful if executing tasks too frequently will cause some errors, \n"
+                                + "such as downloading many files from a server too frequently.")
+    run_mode.add_argument("--timeout",   dest="timeout",     action="store", default=None, type=str,   
+                            help="Timeout of a task (9S, 5m, 3H, 4d, etc.). "
+                               + "This can be useful if a task is not expected to run for too long time. "
+                               + "The 'early stop' strategy can help you explore more settings. "
+                               + "Note that the upper case (1S, 1M, 1H, 1D) denotes that a timeout is considered as SUCESS, "
+                               + "while the lower case (1s, 1m, 1h, 1d) denotes that it is considered as FAILED. ")
 
     # show the result
     show_mode = subparsers.add_parser("show")
-    show_mode.add_argument(              dest="log_path",    action="store",                           help="Specify the log path")
-    show_mode.add_argument("--rule",     dest="rule_path",   action="store", default="",               help="Specify the extraction rule")
+    show_mode.add_argument(              dest="log_path",    action="store",                           
+                            help="Specify the log path such as 'config_name.logs', where the suffix '.logs' can be omitted")
+    show_mode.add_argument("--rule",     dest="rule_path",   action="store", default="",               
+                            help="Specify the extraction rule such as 'rule.yaml', where the suffix '.yaml' can be omitted. ")
     # yapf: enable
 
     opt = parser.parse_args()
+
+    if opt.mode is None:
+        parser.print_help()
+        print("\n\n====== manytasks init ======\n")
+        init_mode.print_help()
+        print("\n\n====== manytasks run  ======\n")
+        run_mode.print_help()
+        print("\n\n====== manytasks show ======\n")
+        show_mode.print_help()
     return opt
 
 
