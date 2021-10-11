@@ -1,7 +1,7 @@
 import multiprocessing
 import os
-from pathlib import Path
 from argparse import ArgumentParser
+from pathlib import Path
 
 import jstyleson
 import psutil
@@ -12,8 +12,8 @@ from manytasks.defs import Mode
 from manytasks.log_extractor import show
 from manytasks.task_runner import prepare_log_directory, start_execution
 from manytasks.taskpool_loader import load_taskpool
-from manytasks.util import (exists_fast_fail, init_config, init_rule, safe_cut,
-                            safe_append)
+from manytasks.util import (exists_fast_fail, init_config, init_rule,
+                            safe_append, safe_cut)
 
 
 def parse_opt():

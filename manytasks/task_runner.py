@@ -1,3 +1,4 @@
+import math
 import os
 import re
 import shutil
@@ -10,7 +11,7 @@ from pathlib import Path
 from manytasks import cuda_manager
 from manytasks.defs import Mode, Status, TaskPool
 from manytasks.util import (current_time, draw_logo, log, log_config,
-                            safe_append, safe_cut, show_task_list)
+                            show_task_list)
 
 
 def run_task(opt, taskpool: TaskPool, task_idx):
@@ -25,7 +26,7 @@ def run_task(opt, taskpool: TaskPool, task_idx):
             env["CUDA_VISIBLE_DEVICES"] = str(cuda_idx)
         callee = task.executor + task.to_callable_args()
 
-        width = len(taskpool) // 10 + 1
+        width = int(math.log10(len(taskpool))) + 1
         task_info = "TASK {:>{width}}/{:>{width}}".format(taskpool.index(task),
                                                           len(taskpool),
                                                           width=width)
@@ -128,7 +129,7 @@ def prepare_log_directory(opt, taskpool):
                 continue
             if is_task_status_line:
                 found = re.search(
-                    r"FINISH TASK\s*(\d+)/(\d+)\s*\|\s*RET\s*(-?\d+)", line)
+                    r"FINISH TASK\s*(\d+)/\s*(\d+)\s*\|\s*RET\s*(-?\d+)", line)
                 if found:
                     task_idx = int(found.group(1))
                     task_ret = int(found.group(3))
