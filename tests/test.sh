@@ -6,7 +6,7 @@ cp ../examples/python/*.* .
 
 echo "[TEST INIT]"
 echo t1.config | manytasks init config
-echo t2.fule | manytasks init rule
+echo t2.rule | manytasks init rule
 
 echo "[TEST RUN]"
 manytasks run tasks | tee t3.normal.log

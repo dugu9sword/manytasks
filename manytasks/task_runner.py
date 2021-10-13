@@ -67,39 +67,28 @@ def run_task(opt, taskpool: TaskPool, task_idx):
 def start_execution(opt, taskpool: TaskPool):
     if opt.random_exe:
         taskpool.shuffle()
-    with ThreadPoolExecutor(opt.concurrency) as pool:
-        futures = []
-        # fill the pool with some tasks
-        while True:
-            if not taskpool.has_next() or len(futures) == opt.concurrency:
-                break
-            next_idx, next_task = taskpool.get_next_task()
-            if next_task.status != Status.SUCCESS:
-                futures.append(pool.submit(run_task, opt, taskpool, next_idx))
-
-        # add more tasks to the pool
-        while True:
-            done_num = 0
-            new_futures = []
-            for task_id, future in enumerate(futures):
+    futures = {}
+    with ThreadPoolExecutor(opt.concurrency) as executor:
+        while not taskpool.finished():
+            done_ids = []
+            for fid, future in futures.items():
                 if future.running():
-                    taskpool[task_id].status = Status.RUNNING
+                    taskpool[fid].status = Status.RUNNING
                 if future.done():
                     if future.result() == 0:
-                        taskpool[task_id].status = Status.SUCCESS
+                        taskpool[fid].status = Status.SUCCESS
                     else:
-                        taskpool[task_id].status = Status.FAILED
-                    done_num += 1
-                    if taskpool.has_next():
-                        next_idx, next_task = taskpool.get_next_task()
-                        new_futures.append(
-                            pool.submit(run_task, opt, taskpool, next_idx))
-            futures.extend(new_futures)
-            if done_num == len(futures):
-                break
-
-    log("DONE!")
-
+                        taskpool[fid].status = Status.FAILED
+                    done_ids.append(fid)
+            for fid in done_ids:
+                futures.pop(fid)
+            while True:
+                if not taskpool.has_next() or len(futures) == opt.concurrency:
+                    break
+                next_idx, next_task = taskpool.get_next_task()
+                if next_task.status != Status.SUCCESS:
+                    futures[next_idx] = executor.submit(run_task, opt, taskpool, next_idx)
+    log("DONE! (total={}, success={}, fail={})".format(len(taskpool), taskpool.num_success(), taskpool.num_failed()))
 
 def prepare_log_directory(opt, taskpool):
     if not os.path.exists(opt.log_path):
@@ -129,9 +118,9 @@ def prepare_log_directory(opt, taskpool):
                 continue
             if is_task_status_line:
                 found = re.search(
-                    r"FINISH TASK\s*(\d+)/\s*(\d+)\s*\|\s*RET\s*(-?\d+)", line)
+                    r"FINISH TASK\s*(\d+)/.*RET\s*(-?\d+)", line)
                 if found:
                     task_idx = int(found.group(1))
-                    task_ret = int(found.group(3))
+                    task_ret = int(found.group(2))
                     if int(task_ret) == 0:
                         taskpool[task_idx].status = Status.SUCCESS

@@ -147,3 +147,20 @@ class TaskPool:
             ret += "{:>4}.  ".format(i) + repr(task) + "\n"
         ret += ")"
         return ret
+
+    def finished(self):
+        return len(self) == (self.num_failed() + self.num_success())
+
+    def num_success(self):
+        ret = 0
+        for task in self:
+            if task.status == Status.SUCCESS:
+                ret += 1
+        return ret
+
+    def num_failed(self):
+        ret = 0
+        for task in self:
+            if task.status == Status.FAILED:
+                ret += 1
+        return ret
