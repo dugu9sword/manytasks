@@ -52,19 +52,56 @@ All running logs are stored in `tasks.logs`.
 
 ## Sample Configuration
 
-```
+```python
 {
-  "executor": "python some.py",    # runnable
-  "cuda": [0, 1],                  # [-1 if not using cuda] cuda index to use
-  "concurrency": 2,                # number of multi-processes
+  # any runnable program, python/perl/bash/java, etc. 
+  "executor": "python some.py",    
+  # When cuda is set to -1/[]/[-1], ManyTasks will not set 
+  # the environment variable CUDA_VISIBLE_DEVICES. 
+  "cuda": [0, 1],
+  # How many processes will be run in parallel?
+  #     - "#CPU" (number of CPUs)
+  #     - "#CUDA" (number of CUDA devices)
+  #     - an integer  
+  "concurrency": 2,
   "configs": {
-    "==base==": [                  # basic configurations
-      "--word-emb", [50, 100],
-      "--learning-rate", "{range(0.001, 0.1, 0.001)}"
+    # basic configurations
+    "==base==": [          
+      # an arg without a key
+      "arg0",
+      # a list of values
+      "--a", [50, 100],
+      # use "{PYTHON SCRIPTS}" to produce a list
+      "-b", "{range(10)}",
+      # use "<...[key]...>" for arg reference
+      "--name", "<a_[--a]_b_[-b]>"
     ],
-    "==more==": []
+    # more disjoint configurations
+    "==more==": [
+      # case 1
+      [
+        "--c1", 1
+      ],
+      # case 2
+      [
+        "--c1", 2
+        "--c2", [3, 4]
+      ],
+    ]
   }
 }
+```
+
+which yields:
+```bash
+python some.py arg0 --a 50 --b 0 --name a_50_b_0 --c1 1
+python some.py arg0 --a 50 --b 0 --name a_50_b_0 --c1 2 --c2 3
+python some.py arg0 --a 50 --b 0 --name a_50_b_0 --c1 2 --c2 4
+
+python some.py arg0 --a 50 --b 1 --name a_50_b_0 --c1 1
+python some.py arg0 --a 50 --b 1 --name a_50_b_0 --c1 2 --c2 3
+python some.py arg0 --a 50 --b 1 --name a_50_b_0 --c1 2 --c2 4
+...
 ```
 
 ## Advanced Usage
