@@ -56,6 +56,8 @@ class Task:
         for arg in self.args:
             if arg.key.startswith("__"):
                 buff.append(arg.value)
+            elif arg.value == "✔":
+                buff.append(arg.key)
             else:
                 buff.append("{}".format(arg.key))
                 buff.append("{}".format(arg.value))

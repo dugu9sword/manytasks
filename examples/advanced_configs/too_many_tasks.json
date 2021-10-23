@@ -1,0 +1,18 @@
+{
+    "executor": "manytasks run",
+    "cuda": [
+        -1
+    ],
+    "concurrency": 1,
+    "configs": {
+        "==base==": [
+
+        ],
+        "==more==": [
+            ["arg_reference", "--dry"],
+            ["arg_reference", "--override"],
+            ["arg_reference", "--override"],
+            ["arg_reference", "--resume"]
+        ]
+    }
+}

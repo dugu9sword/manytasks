@@ -52,6 +52,8 @@ All running logs are stored in `tasks.logs`.
 
 ## Sample Configuration
 
+For more details, see `examples/advanced_configs`.
+
 ```python
 {
   # any runnable program, python/perl/bash/java, etc. 
@@ -73,7 +75,7 @@ All running logs are stored in `tasks.logs`.
       "--a", [50, 100],
       # use "{PYTHON SCRIPTS}" to produce a list
       "-b", "{range(10)}",
-      # use "<...[key]...>" for arg reference
+      # use "<...[key]...>" to refer to an arg
       "--name", "<a_[--a]_b_[-b]>"
     ],
     # more disjoint configurations

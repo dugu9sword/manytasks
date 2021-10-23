@@ -31,9 +31,10 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
     
     current_key = None
     for ele in config:
-        if current_key is None and check_key(ele):
+        if check_key(ele):
+            if current_key is not None:
+                ret.append((current_key, ["✔"]))
             current_key = ele
-            continue
         else:
             # key-value or non-key value?
             if isinstance(ele, list):
@@ -64,6 +65,8 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
                     current_key = None  
                 else:
                     ret.append((next(nonekey), [ele]))
+    if current_key is not None:
+        ret.append((current_key, ["✔"]))
     return ret
 
 
@@ -91,8 +94,29 @@ def apply_arg_reference(tasks: List[Task]):
                     found = re.search(r"\[[^]]*\]", val)
                     if not found:
                         break
-                    found_key = found.group()
-                    val = val.replace(found_key, task[found_key[1:-1]])
+                    arg_ref = found.group()
+
+                    if re.search(r"([^:]*):([-]*\d*):([-]*\d*):(\d*)", arg_ref[1:-1]):
+                        # arg_ref ~ [key:start_idx:end_idx:length]
+                        refered_key, start_idx, end_idx, length = arg_ref[1:-1].split(":")
+                        start_idx = int(start_idx) if start_idx != "" else 0
+                        end_idx = int(end_idx) if end_idx != "" else 0
+                        length = int(length) if length != "" else 0
+                        assert not (end_idx != 0 and length != 0)
+                        if end_idx != 0:
+                            new_val = task[refered_key][start_idx:end_idx]
+                        if length != 0:
+                            new_val = task[refered_key][start_idx:start_idx+length]
+                    elif re.search(r"([^:]):([^;@]+@[^;]+)", arg_ref[1:-1]):
+                        # arg_ref ~ [key:pattern@val;pattern@val;pattern@val]
+                        refered_key, pairs = arg_ref[1:-1].split(":")
+                        refered_val = task[refered_key]
+                        pairs = dict(re.findall(r"([^@;]+)@([^;]+)[;]?", pairs))
+                        new_val = pairs[refered_val]
+                    else:
+                        # arg_ref ~ [key]
+                        new_val = task[arg_ref[1:-1]]
+                    val = val.replace(arg_ref, new_val)
                 task[key] = val
 
 

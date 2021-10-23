@@ -13,7 +13,7 @@ from manytasks.log_extractor import show
 from manytasks.task_runner import prepare_log_directory, start_execution
 from manytasks.taskpool_loader import load_taskpool
 from manytasks.util import (exists_fast_fail, init_config, init_rule,
-                            safe_append, safe_cut)
+                            safe_append, safe_cut, show_task_list)
 
 
 def parse_opt():
@@ -46,6 +46,8 @@ def parse_opt():
                                 + "Only tasks that are failed will be runned again.")
     run_mode.add_argument("--random-exe",dest="random_exe",  action="store_true",                      
                             help="Whether tasks are executed randomly. ")
+    run_mode.add_argument("--dry",       dest="dry",         action="store_true",                      
+                            help="Just print all tasks to run instead of running them. ")
     run_mode.add_argument("--latency",   dest="latency",     action="store", default=1,    type=int,   
                             help="Time (seconds) between execution of two tasks ." 
                                 + "This can be useful if executing tasks too frequently will cause some errors, \n"
@@ -165,9 +167,12 @@ def main():
         exists_fast_fail(opt.config_path)
 
         taskpool = load_taskpool(opt.config_path)
-        preprocess(opt)
-        prepare_log_directory(opt, taskpool)
-        start_execution(opt, taskpool)
+        if opt.dry:
+            show_task_list(taskpool, target="c")
+        else:
+            preprocess(opt)
+            prepare_log_directory(opt, taskpool)
+            start_execution(opt, taskpool)
 
     elif opt.mode == "show":
         opt.log_path = safe_append(opt.log_path, ".logs")

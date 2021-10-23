@@ -15,7 +15,7 @@
             // You can pass a list
             "--arch", ["lstm", "transformer"],
             // You can even pass a python script which returns an iterable
-            "--layer", "{range(2, 6, 5)}"
+            "--layer", "{range(2, 6, 2)}"
         ],
         "==more==": [
             [ 

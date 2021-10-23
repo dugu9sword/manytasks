@@ -44,8 +44,8 @@ def draw_logo():
     """)
 
 
-def show_task_list(taskpool: TaskPool):
-    log(">>>>>> Show the task list...")
+def show_task_list(taskpool: TaskPool, target="cf"):
+    log(">>>>>> Show the task list...", target=target)
     header = ['idx'] + taskpool.keys
     table = [header]
     for idx, task in enumerate(taskpool):
@@ -56,8 +56,8 @@ def show_task_list(taskpool: TaskPool):
             else:
                 values.append("-")
         table.append([idx] + values)
-    log(tabulate(table))
-    log()
+    log(tabulate(table), target=target)
+    log(target=target)
 
 
 def read_from_console(prompt, default):
