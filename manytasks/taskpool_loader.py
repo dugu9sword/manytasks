@@ -1,6 +1,7 @@
 import itertools
 import re
 from typing import List, Tuple
+from collections import defaultdict
 
 import jstyleson
 
@@ -108,10 +109,12 @@ def apply_arg_reference(tasks: List[Task]):
                         if length != 0:
                             new_val = task[refered_key][start_idx:start_idx+length]
                     elif re.search(r"([^:]):([^;@]+@[^;]+)", arg_ref[1:-1]):
-                        # arg_ref ~ [key:pattern@val;pattern@val;pattern@val]
+                        # arg_ref ~ [key:pattern@val;pattern@val;pattern@val;_@default]
                         refered_key, pairs = arg_ref[1:-1].split(":")
                         refered_val = task[refered_key]
                         pairs = dict(re.findall(r"([^@;]+)@([^;]+)[;]?", pairs))
+                        if "_" in pairs:
+                            pairs = defaultdict(lambda: pairs["_"], pairs)
                         new_val = pairs[refered_val]
                     else:
                         # arg_ref ~ [key]

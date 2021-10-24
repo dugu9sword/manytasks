@@ -6,9 +6,9 @@
     "concurrency": 1,
     "configs": {
         "==base==": [
-            "-state", ["china", "us", "japan"],
+            "-state", ["china", "united_states", "japan", "russia"],
             "-news", ["sports", "academic", "game"],
-            "-abbr", "<[-state:china@zh;us@en;japan@ja]_[-news:::2]>"
+            "-abbr", "<[-state:china@zh;united_states@us;_@other]_[-news:::2]>"
         ],
         "==more==": []
     }
