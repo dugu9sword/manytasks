@@ -178,6 +178,11 @@ See `examples/python/analyze_log.ipynb` for details.
 
 ## History
 
+**2021.11.8**, Small changes.
+
+- [x] Code refactoring, bugfix, more examples.
+- [x] Better support for arg reference (substring, key-based reference).
+
 **2021.10.3**, Big changes. Code refactoring, the architecture changes a lot.
 
 - [x] Better support for log extraction with `yaml` rule file.
