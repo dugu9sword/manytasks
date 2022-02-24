@@ -14,12 +14,13 @@ A lightweight tool for deploying many tasks automatically, without any modificat
 
 ## Publications Using this Tool
 
-- **Arxiv 2020**: *Chinese Named Entity Recognition Augmented with Lexicon Memory*. 
+- **Arxiv 2020**: *Chinese Named Entity Recognition Augmented with Lexicon Memory* (Accepted by **JCST 2022**). 
 - **ACL 2020**: *Evaluating and Enhancing the Robustness of Neural Network-based Dependency Parsing Models with Adversarial Examples*. 
 - **ACL 2021**: *Defense against Synonym Substitution-based Adversarial Attacks via Dirichlet Neighborhood Ensemble*.
 - **WMT 2021**: *The Volctrans GLAT System: Non-autoregressive Translation Meets WMT21*.
 - **EMNLP 2021**: *On the Transferability of Adversarial Attacks against Neural NLP Models*. 
 - **EMNLP 2021**: *Searching for an Effiective Defender: Benchmarking Defense against Adversarial Word Substitution*. 
+- **ACL 2022**: *Towards Adversarially Robust Text Classifiers by Learning to Reweight Clean Examples*.
 
 
 
