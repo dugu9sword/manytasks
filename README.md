@@ -14,6 +14,8 @@ A lightweight tool for deploying many tasks automatically, without any modificat
 
 ## Publications Using this Tool
 
+*I'd like to claim that it is very STABLE 😊 and SUITABLE 👍 for research, it will make your skin smoother!*
+
 - **Arxiv 2020**: *Chinese Named Entity Recognition Augmented with Lexicon Memory* (Accepted by **JCST 2022**). 
 - **ACL 2020**: *Evaluating and Enhancing the Robustness of Neural Network-based Dependency Parsing Models with Adversarial Examples*. 
 - **ACL 2021**: *Defense against Synonym Substitution-based Adversarial Attacks via Dirichlet Neighborhood Ensemble*.
