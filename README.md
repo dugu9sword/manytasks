@@ -3,7 +3,7 @@
 A lightweight tool for deploying many tasks automatically, without any modification to your code.
 
 * [Manytasks](#manytasks)
-   * [Publications Using this Tool](#publications-using-this-tool)
+   <!-- * [Publications Using this Tool](#publications-using-this-tool) -->
    * [Installation](#installation)
    * [Quick Example](#quick-example)
    * [Sample Configuration](#sample-configuration)
@@ -12,6 +12,7 @@ A lightweight tool for deploying many tasks automatically, without any modificat
    * [History](#history)
 
 
+<!-- 
 ## Publications Using this Tool
 
 *I'd like to claim that it is very STABLE 😊 and SUITABLE 👍 for research, it will make your skin smoother!*
@@ -22,7 +23,8 @@ A lightweight tool for deploying many tasks automatically, without any modificat
 - **WMT 2021**: *The Volctrans GLAT System: Non-autoregressive Translation Meets WMT21*.
 - **EMNLP 2021**: *On the Transferability of Adversarial Attacks against Neural NLP Models*. 
 - **EMNLP 2021**: *Searching for an Effiective Defender: Benchmarking Defense against Adversarial Word Substitution*. 
-- **ACL 2022**: *Towards Adversarially Robust Text Classifiers by Learning to Reweight Clean Examples*.
+- **ACL 2022**: *Towards Adversarially Robust Text Classifiers by Learning to Reweight Clean Examples*. 
+-->
 
 
 
@@ -76,10 +78,10 @@ For more details, see `examples/advanced_configs`.
       "arg0",
       # a list of values
       "--a", [50, 100],
-      # use "{PYTHON SCRIPTS}" to produce a list
-      "-b", "{range(10)}",
-      # use "<...[key]...>" to refer to an arg
-      "--name", "<a_[--a]_b_[-b]>"
+      # use "...$<PYTHON SCRIPTS>..." to produce a list
+      "-b", "$<range(10)>",
+      # use "...${key}..." to refer to an arg
+      "--name", "a_${--a}_b_${-b}"
     ],
     # more disjoint configurations
     "==more==": [

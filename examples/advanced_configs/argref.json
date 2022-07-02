@@ -1,0 +1,14 @@
+{
+    "executor": "python main.py",
+    "cuda": [
+        -1
+    ],
+    "concurrency": 1,
+    "configs": {
+        "==base==": [
+            "--x", ["en", "de", "it", "cn"],
+            "--output", "${--x[en:english,de:german,_:other]}"
+        ],
+        "==more==": []
+    }
+}

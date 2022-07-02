@@ -37,35 +37,19 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
                 ret.append((current_key, ["✔"]))
             current_key = ele
         else:
-            # key-value or non-key value?
-            if isinstance(ele, list):
-                if current_key:
-                    ret.append((current_key, ele))
-                    current_key = None
-                else:
-                    ret.append((next(nonekey), ele))
-                continue
             # convert int/float to str, and pass it to the next `if` statement
             if isinstance(ele, int) or isinstance(ele, float):
                 ele = str(ele)
+            # key-value or non-key value?
+            if isinstance(ele, list):
+                values = ele
             if isinstance(ele, str) and ele != "":
-                if ele[0] == '{' and ele[-1] == '}':
-                    try:
-                        val = list(eval(ele[1:-1]))
-                        if current_key:
-                            ret.append((current_key, val))
-                            current_key = None
-                        else:
-                            ret.append((next(nonekey), val))
-                    except Exception:
-                        print("Error occurs when parsing {}: {}!".format(current_key, ele))
-                        exit(1)
-                    continue
-                if current_key:
-                    ret.append((current_key, [ele]))
-                    current_key = None  
-                else:
-                    ret.append((next(nonekey), [ele]))
+                values = parse_string(ele) 
+            if current_key:
+                ret.append((current_key, values))
+                current_key = None  
+            else:
+                ret.append((next(nonekey), values))
     if current_key is not None:
         ret.append((current_key, ["✔"]))
     return ret
@@ -85,42 +69,118 @@ def config_to_tasks(executor, configs):
     return ret
 
 
+def parse_string(string):
+    """
+        Test Case:
+
+            print(parse_string("$<1:6:2;2>"))
+            print(parse_string("$<1:4>"))
+            print(parse_string("$<a|b|c>"))
+            print(parse_string("$<a|b|c>.$<1:4>"))
+            print(parse_string("$<[f'{i:03}' for i in range(1, 10, 2)]>"))
+            print(parse_string("$<os.listdir()>"))
+    """
+    enum_lists = []
+    enum_idx = 0
+    # Step 1. analyze the string to find all possible cases to enumerate
+    while True:
+        found = re.search(r"\$\<[^>]*\>", string)
+        if not found:
+            break
+        
+        enum_repr = found.group()
+
+        while "SWITCH":
+            # Case I
+            #   $<start:end:[step]:[zfill]>
+            found = re.search(r"^(-?\d+)(:-?\d+)(:-?\d+)?(;\d+)?$", enum_repr[2:-1])
+            if found:
+                start = int(found.group(1))
+                end = int(found.group(2)[1:])
+                step = int(found.group(3)[1:]) if found.group(3) else None
+                zero_num = int(found.group(4)[1:]) if found.group(4) else None
+                if step:
+                    r = range(start, end, step)
+                else:
+                    r = range(start, end)
+                if zero_num:
+                    enum_list = list(str(i).zfill(zero_num) for i in r)
+                else:
+                    enum_list = list(str(i) for i in r)
+                break
+
+            # Case II
+            #   $<a|b|c|d>
+            found = re.search(r"^([^|]+\|)+[^|]+$", enum_repr[2:-1])
+            if found:
+                enum_list = enum_repr[2:-1].split("|")
+                break
+
+            # Case Fallback
+            #   $<python-script>
+            try:
+                enum_list = list(eval(enum_repr[2:-1]))
+            except Exception:
+                print("Error occurs when parsing {}: {}!".format(string, enum_repr))
+                exit(1)
+
+            break
+
+        string = string.replace(enum_repr, f'🔢<{enum_idx}>')
+        enum_lists.append(enum_list)
+        enum_idx += 1
+        
+    # Step 2. expand the string to list
+    if enum_idx == 0:
+        ret = [string]
+    else:
+        enum_product = list(itertools.product(*enum_lists))
+        ret = []
+        for i in range(len(enum_product)):
+            tmp = string
+            for eid in range(enum_idx):
+                tmp = tmp.replace(f'🔢<{eid}>', str(enum_product[i][eid]))
+            ret.append(tmp)   
+        
+    return ret
+
+
 def apply_arg_reference(tasks: List[Task]):
     for task in tasks:
         for arg in task:
             key, val = arg.key, arg.value
-            if val[0] == "<" and val[-1] == ">":
-                val = val[1:-1]
-                while True:
-                    found = re.search(r"\[[^]]*\]", val)
-                    if not found:
-                        break
-                    arg_ref = found.group()
+            while True:
+                found = re.search(r"\$\{[^}]+\}", val)
+                if not found:
+                    break
+                arg_ref = found.group()
 
-                    if re.search(r"([^:]*):([-]*\d*):([-]*\d*):(\d*)", arg_ref[1:-1]):
-                        # arg_ref ~ [key:start_idx:end_idx:length]
-                        refered_key, start_idx, end_idx, length = arg_ref[1:-1].split(":")
-                        start_idx = int(start_idx) if start_idx != "" else 0
-                        end_idx = int(end_idx) if end_idx != "" else 0
-                        length = int(length) if length != "" else 0
-                        assert not (end_idx != 0 and length != 0)
-                        if end_idx != 0:
-                            new_val = task[refered_key][start_idx:end_idx]
-                        if length != 0:
-                            new_val = task[refered_key][start_idx:start_idx+length]
-                    elif re.search(r"([^:]):([^;@]+@[^;]+)", arg_ref[1:-1]):
-                        # arg_ref ~ [key:pattern@val;pattern@val;pattern@val;_@default]
-                        refered_key, pairs = arg_ref[1:-1].split(":")
+                while "SWITCH":
+                    # Case I: ${--key[start_idx:end_idx]}
+                    found = re.search(r"^([^\[]+)\[(\d*):(-?\d*)\]$", arg_ref[2:-1])
+                    if found:
+                        refered_key = found.group(1)
+                        start_idx = int(found.group(2)) if found.group(2) else 0
+                        end_idx = int(found.group(3)) if found.group(3) else None
+                        new_val = task[refered_key][start_idx:end_idx]
+                        break
+                    
+                    # Case II: ${--key[pattern1:val1,pattern2:val2,_:default]}
+                    found = re.search(r"^([^\[]+)\[((([^:]+):([^,]+))+)\]$", arg_ref[2:-1])
+                    if found:
+                        refered_key, pairs = found.group(1), found.group(2)
                         refered_val = task[refered_key]
-                        pairs = dict(re.findall(r"([^@;]+)@([^;]+)[;]?", pairs))
+                        pairs = dict(re.findall(r"([^:]+):([^,]+),?", pairs))
                         if "_" in pairs:
                             pairs = defaultdict(lambda: pairs["_"], pairs)
                         new_val = pairs[refered_val]
-                    else:
-                        # arg_ref ~ [key]
-                        new_val = task[arg_ref[1:-1]]
-                    val = val.replace(arg_ref, new_val)
-                task[key] = val
+                        break
+                    
+                    # arg_ref ~ key
+                    new_val = task[arg_ref[2:-1]]
+                    break
+                val = val.replace(arg_ref, new_val)
+            task[key] = val
 
 
 def load_taskpool(path):
