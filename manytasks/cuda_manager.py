@@ -1,22 +1,20 @@
 from multiprocessing import Manager
 
 manager = Manager()
-cuda_num = manager.dict()
+num_tasks_on_cuda = manager.dict()
 cuda_lock = manager.Lock()
 
 
-def acquire_cuda():
+def acquire_cuda(num=1):
     with cuda_lock:
-        min_cuda_idx = -1
-        min_cuda_task_num = 1000
-        for cuda_idx in cuda_num.keys():
-            if cuda_num[cuda_idx] < min_cuda_task_num:
-                min_cuda_idx = cuda_idx
-                min_cuda_task_num = cuda_num[cuda_idx]
-        cuda_num[min_cuda_idx] += 1
-    return min_cuda_idx
+        sorted_idxs_by_num = sorted(list(num_tasks_on_cuda.items()), key=lambda kv: kv[1])
+        cuda_idxs = tuple(list(map(lambda kv: kv[0], sorted_idxs_by_num[:num])))
+        for idx in cuda_idxs:
+            num_tasks_on_cuda[idx] += 1
+    return cuda_idxs
 
 
-def release_cuda(cuda_idx):
+def release_cuda(cuda_idxs):
     with cuda_lock:
-        cuda_num[cuda_idx] -= 1
+        for ele in cuda_idxs:
+            num_tasks_on_cuda[ele] -= 1

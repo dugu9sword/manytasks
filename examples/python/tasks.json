@@ -1,13 +1,17 @@
 {
     "executor": "python main.py",
-    // When cuda is set to -1/[]/[-1], ManyTasks will not set 
-    // the environment variables CUDA_VISIBLE_DEVICES. 
-    "cuda": [-1],
+    // Which GPUs do you want to use?
+    //     - []          CUDA_VISIBLE_DEVICES="" (not set)
+    //     - -1          CUDA_VISIBLE_DEVICES=-1 (do not use GPU)
+    //     - [0, 1, 2]   CUDA_VISIBLE_DEVICES=<ManyTasks will allocate device>
+    "cuda": [0, 1, 2],
     // How many processes will be run in parallel?
     //     - "#CPU" (number of CPUs)
     //     - "#CUDA" (number of CUDA devices)
     //     - an integer
-    "concurrency": "4",
+    "concurrency": 4,
+    // How many GPUs will be used for each task?
+    "cuda_per_task": 1,
     "configs": {
         "==base==": [
             // You can pass an arg without a key

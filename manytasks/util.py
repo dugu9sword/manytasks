@@ -97,6 +97,7 @@ def init_config():
             "executor": "python main.py",
             "cuda": [-1],
             "concurrency": 1,
+            "cuda_per_task": 1,
             "configs": {
                 "==base==": [],
                 "==more==": []

@@ -128,13 +128,17 @@ def preprocess(opt):
     # Initialze cuda manager
     config = jstyleson.load(fp=open(opt.config_path))
     cuda = config["cuda"]
-    if cuda == [] or cuda == -1:
-        cuda = [-1]
-    if cuda[0] != -1 and psutil.WINDOWS:
+    opt.cuda = cuda
+    assert isinstance(cuda, list) or cuda == -1
+    if cuda != -1 and psutil.WINDOWS:
         print("CUDA shoule be -1 on windows")
         exit()
-    for cuda_id in cuda:
-        cuda_manager.cuda_num[cuda_id] = 0
+    if len(cuda) == 0 or cuda == -1:
+        pass
+    else:
+        for cuda_id in cuda:
+            cuda_manager.num_tasks_on_cuda[cuda_id] = 0
+    opt.cuda_per_task = int(config["cuda_per_task"])
 
     # Add opt.concurrency
     if config["concurrency"] == "#CUDA":

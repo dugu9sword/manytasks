@@ -20,10 +20,16 @@ def run_task(opt, taskpool: TaskPool, task_idx):
     task = taskpool[task_idx]
 
     with open("{}/task-{}.txt".format(opt.log_path, task_idx), 'w') as output:
-        cuda_idx = cuda_manager.acquire_cuda()
         env = os.environ.copy()
-        if cuda_idx != -1:
-            env["CUDA_VISIBLE_DEVICES"] = str(cuda_idx)
+        if opt.cuda == -1:
+            cuda_str = "-1"
+        elif len(opt.cuda) == 0:
+            cuda_str = ""
+        else:
+            cuda_idxs = cuda_manager.acquire_cuda(opt.cuda_per_task)
+            cuda_str = ",".join(list(map(str, cuda_idxs)))
+
+        env["CUDA_VISIBLE_DEVICES"] = cuda_str
         callee = task.executor + task.to_callable_args()
 
         width = int(math.log10(len(taskpool))) + 1
@@ -33,7 +39,7 @@ def run_task(opt, taskpool: TaskPool, task_idx):
 
         # process starting...
         p = subprocess.Popen(callee, stdout=output, stderr=output, env=env)
-        cuda_status = "| CUDA {}".format(cuda_idx) if cuda_idx != -1 else ""
+        cuda_status = "| CUDA {}".format(cuda_str) if cuda_str != "" else ""
         pid_status = "| PID {:<8}".format(p.pid)
         status = " START {} {} {}".format(task_info, cuda_status, pid_status)
         log("{} [{}] {} : {}".format("👉", current_time(), status,
@@ -51,7 +57,7 @@ def run_task(opt, taskpool: TaskPool, task_idx):
                     ret = 0
                 else:
                     ret = -1926
-        cuda_status = "| CUDA {}".format(cuda_idx) if cuda_idx != -1 else ""
+        cuda_status = "| CUDA {}".format(cuda_str) if cuda_str != "" else ""
         ret_status = "| RET {:<8}".format(ret)
         status = "FINISH {} {} {}".format(task_info, cuda_status, ret_status)
         log("{} [{}] {} : {}".format(
@@ -60,7 +66,8 @@ def run_task(opt, taskpool: TaskPool, task_idx):
                 -1926: "🐸"
             })[ret], current_time(), status, task.to_finalized_cmd()))
 
-        cuda_manager.release_cuda(cuda_idx)
+        if cuda_str not in ("-1", ""):
+            cuda_manager.release_cuda(cuda_idxs)
         return ret
 
 
