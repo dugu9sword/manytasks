@@ -11,6 +11,8 @@ parser.add_argument('--layer', dest='layer', type=int, action='store')
 parser.add_argument('--opt', dest='opt', action='store')
 parser.add_argument('--lr', dest='lr', type=float, action='store')
 parser.add_argument('--decay', dest='decay', default=1e-2, type=float, action='store')
+parser.add_argument('--fp16', dest='fp16', default=False, type=bool, action='store_true')
+parser.add_argument('--fix-embedding', dest='fix_embeeding', default=False, type=bool, action='store_true')
 
 args = parser.parse_args()
 

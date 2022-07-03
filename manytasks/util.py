@@ -5,7 +5,7 @@ import jstyleson
 import yaml
 from tabulate import tabulate
 
-from manytasks.defs import TaskPool
+from manytasks.defs import Reserved, TaskPool
 
 
 def log(*info, target='cf'):
@@ -52,7 +52,10 @@ def show_task_list(taskpool: TaskPool, target="cf"):
         values = []
         for key in taskpool.keys:
             if key in task.keys:
-                values.append(task[key])
+                if Reserved.is_reserved(task[key]):
+                    values.append(Reserved.symbol(task[key]))
+                else:
+                    values.append(task[key])
             else:
                 values.append("-")
         table.append([idx] + values)

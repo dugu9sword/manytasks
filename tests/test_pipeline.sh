@@ -1,7 +1,5 @@
-rm -rf *.logs
-rm *.log
-rm *.json
-rm *.rule
+bash clear.sh
+
 cp ../examples/python/*.* .
 
 echo "[TEST INIT]"

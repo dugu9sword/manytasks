@@ -5,10 +5,10 @@ from collections import defaultdict
 
 import jstyleson
 
-from manytasks.defs import Arg, Task, TaskPool
+from manytasks.defs import Arg, Reserved, Task, TaskPool
 
 
-def check_key(ele):
+def is_key(ele):
     if isinstance(ele, str) and ele.startswith("-"):
         try:
             float(ele.lstrip("-"))
@@ -19,23 +19,42 @@ def check_key(ele):
         return False
 
 
-def nonekey_generator():
+def nonekey_generator(prefix=None):
     idx = 0
     while True:
         idx += 1
-        yield "__{}".format(idx)
+        if prefix is None:
+            yield "__{}".format(idx)
+        else:
+            yield "__{}.{}".format(prefix, idx)
 
 
-def parse_config(config: dict) -> List[Tuple[str, List]]:
-    nonekey = nonekey_generator()
+def parse_config(cfg_name, config: list) -> List[Tuple[str, List]]:
+    """
+        Input:  parse_config(None, [
+                    "data",
+                    "--multigpu",
+                    "--fp16", ["$_ON_", "$_OFF_"],
+                    "--a", [1, 2],
+                    "-b", "$<1:4>"
+                ])
+        Return: [
+                    ("__1", ["data"]),
+                    ("--multigpu", ["$_ON_"]),
+                    ("--fp16", ["$_ON_", "$_OFF_"]),
+                    ("--a", ["1", "2"]),
+                    ("-b", ["1", "2", "3"])
+                ]
+    """
+    nonekey = nonekey_generator(cfg_name)
     ret = []
     
-    current_key = None
+    pending_key = None
     for ele in config:
-        if check_key(ele):
-            if current_key is not None:
-                ret.append((current_key, ["✔"]))
-            current_key = ele
+        if is_key(ele):
+            if pending_key is not None:
+                ret.append((pending_key, [Reserved.ON]))
+            pending_key = ele
         else:
             # convert int/float to str, and pass it to the next `if` statement
             if isinstance(ele, int) or isinstance(ele, float):
@@ -43,29 +62,15 @@ def parse_config(config: dict) -> List[Tuple[str, List]]:
             # key-value or non-key value?
             if isinstance(ele, list):
                 values = ele
-            if isinstance(ele, str) and ele != "":
+            if isinstance(ele, str):
                 values = parse_string(ele) 
-            if current_key:
-                ret.append((current_key, values))
-                current_key = None  
+            if pending_key:
+                ret.append((pending_key, values))
+                pending_key = None
             else:
                 ret.append((next(nonekey), values))
-    if current_key is not None:
-        ret.append((current_key, ["✔"]))
-    return ret
-
-
-def config_to_tasks(executor, configs):
-    ret = []
-    # [(k1, [v1, v2]), (k2, [v1])] -> [[(k1, v1), (k1, v2])], [(k2, v1)]]
-    expand_configs = []
-    for conf in configs:
-        expand_configs.append([(conf[0], ele) for ele in conf[1]])
-    for arg_list in itertools.product(*expand_configs):
-        args = []
-        for arg in arg_list:
-            args.append(Arg(key=arg[0], value=str(arg[1])))
-        ret.append(Task(executor, args))
+    if pending_key is not None:
+        ret.append((pending_key, [Reserved.ON]))
     return ret
 
 
@@ -145,6 +150,20 @@ def parse_string(string):
     return ret
 
 
+def config_to_tasks(executor, configs):
+    ret = []
+    # [(k1, [v1, v2]), (k2, [v1])] -> [[(k1, v1), (k1, v2])], [(k2, v1)]]
+    expand_configs = []
+    for conf in configs:
+        expand_configs.append([(conf[0], ele) for ele in conf[1]])
+    for arg_list in itertools.product(*expand_configs):
+        args = []
+        for arg in arg_list:
+            args.append(Arg(key=arg[0], value=str(arg[1])))
+        ret.append(Task(executor, args))
+    return ret
+
+
 def apply_arg_reference(tasks: List[Task]):
     for task in tasks:
         for arg in task:
@@ -186,8 +205,10 @@ def apply_arg_reference(tasks: List[Task]):
 def load_taskpool(path):
     config = jstyleson.load(fp=open(path))
     executor = config["executor"].split(" ")
-    base_conf = parse_config(config["configs"]["==base=="])
-    more_confs = list(map(parse_config, config["configs"]["==more=="]))
+    base_conf = parse_config(None, config["configs"]["==base=="])
+    more_confs = []
+    for mid, more_conf in enumerate(config["configs"]["==more=="]):
+        more_confs.append(parse_config("m{}".format(mid), more_conf))
     if len(more_confs) == 0:
         more_confs = [[]]
     tasks = []

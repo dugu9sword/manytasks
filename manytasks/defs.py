@@ -56,8 +56,10 @@ class Task:
         for arg in self.args:
             if arg.key.startswith("__"):
                 buff.append(arg.value)
-            elif arg.value == "✔":
+            elif arg.value == Reserved.ON:
                 buff.append(arg.key)
+            elif arg.value == Reserved.OFF:
+                pass
             else:
                 buff.append("{}".format(arg.key))
                 buff.append("{}".format(arg.value))
@@ -87,6 +89,22 @@ class Status:
     FAILED = "FAILED"
     PENDING = "PENDING"
     RUNNING = "RUNNING"
+
+
+class Reserved:
+    ON = "$_ON_"
+    OFF = "$_OFF_"
+
+    @classmethod
+    def symbol(cls, word):
+        return {
+            cls.ON: "✔",
+            cls.OFF: "-", # or use "☐"?
+        }[word]
+
+    @classmethod
+    def is_reserved(cls, word):
+        return word in [cls.ON, cls.OFF]
 
 
 class TaskPool:

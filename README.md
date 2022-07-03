@@ -183,6 +183,13 @@ See `examples/python/analyze_log.ipynb` for details.
 
 ## History
 
+**2022.7.3**, Big changes.
+
+- [x] Support for magic expression in config expansion such as `$<1:10:2>` and `$<a|b|c>`.
+- [x] Support for easier combination of magic expressions, such as `$<a|b|c>.$<1:10:2>`.
+- [x] Make arg reference more readable, change `[-a:1:4:]` to `${-a[1:4]}`.
+- [x] Support for passing an argument (or not) to set (or not) a flag.
+
 **2021.11.8**, Small changes.
 
 - [x] Code refactoring, bugfix, more examples.

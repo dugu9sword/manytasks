@@ -15,10 +15,12 @@
             // You can pass a list
             "--arch", ["lstm", "transformer"],
             // You can even pass a python script which returns an iterable
-            "--layer", "$<range(2,6,2)>"
+            "--layer", "$<range(2,6,2)>",
+            "--fp16",
+            "--fix-embedding", ["$_ON_", "$_OFF_"]
         ],
         "==more==": [
-            [ 
+            [
                 "--opt", "adam",
                 "--lr", ["1e-2", "5e-4"],
                 "--decay", ["0.01"]
