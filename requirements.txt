@@ -1,9 +1,9 @@
-nvidia-ml-py3
-tailer
+# nvidia-ml-py3
+# tailer
 jstyleson
 tabulate
 numpy
 psutil
 pyyaml
-matplotlib-label-lines
-seaborn
+# matplotlib-label-lines
+# seaborn
