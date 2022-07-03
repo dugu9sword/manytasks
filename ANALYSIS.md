@@ -1,5 +1,6 @@
-# Advanced Usage
+# Analysis
 
+See `examples/python`.
 
 ## Result Extraction
 

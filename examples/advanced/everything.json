@@ -1,0 +1,26 @@
+{
+    "executor": "echo",
+    "cuda": [0, 1, 2, 3],
+    "concurrency": 2,
+    "cuda_per_task": 2,
+    "configs": {
+        "==base==": [
+            
+        ],
+        "==more==": [
+            [
+                "--k", "$<a|b|c>",
+                "--save", "ckpts/${--k}"
+            ],
+            [   
+                "--k", "$<7:14:2;4>",
+                "--flag",   
+                "--save", "ckpts/${--k[2:]}"
+            ],
+            [   
+                "--k", "$<range(99, 101)>",
+                "--flag", ["$_ON_", "$_OFF_"]
+            ],
+        ]
+    }
+}

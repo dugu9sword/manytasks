@@ -2,30 +2,13 @@
 
 A lightweight tool for deploying many tasks automatically, without any modification to your code.
 
-* [Manytasks](#manytasks)
-   <!-- * [Publications Using this Tool](#publications-using-this-tool) -->
-   * [Installation](#installation)
-   * [Quick Example](#quick-example)
-   * [Sample Configuration](#sample-configuration)
-   * [Design Philosophy](#design-philosophy)
-   * [Advanced Usage](#advanced-usage)
-   * [History](#history)
-
-
-<!-- 
-## Publications Using this Tool
-
-*I'd like to claim that it is very STABLE 😊 and SUITABLE 👍 for research, it will make your skin smoother!*
-
-- **Arxiv 2020**: *Chinese Named Entity Recognition Augmented with Lexicon Memory* (Accepted by **JCST 2022**). 
-- **ACL 2020**: *Evaluating and Enhancing the Robustness of Neural Network-based Dependency Parsing Models with Adversarial Examples*. 
-- **ACL 2021**: *Defense against Synonym Substitution-based Adversarial Attacks via Dirichlet Neighborhood Ensemble*.
-- **WMT 2021**: *The Volctrans GLAT System: Non-autoregressive Translation Meets WMT21*.
-- **EMNLP 2021**: *On the Transferability of Adversarial Attacks against Neural NLP Models*. 
-- **EMNLP 2021**: *Searching for an Effiective Defender: Benchmarking Defense against Adversarial Word Substitution*. 
-- **ACL 2022**: *Towards Adversarially Robust Text Classifiers by Learning to Reweight Clean Examples*. 
--->
-
+- [Manytasks](#manytasks)
+  - [Installation](#installation)
+  - [Quick Example](#quick-example)
+  - [Sample Configuration](#sample-configuration)
+  - [Design Philosophy](#design-philosophy)
+  - [Analysis](#analysis)
+  - [History](#history)
 
 
 ## Installation
@@ -57,43 +40,26 @@ All running logs are stored in `tasks.logs`.
 
 ## Sample Configuration
 
-For more details, see `examples/advanced_configs`.
+For more complex cases, see `ADVANCED_CASES.md`.
 
 ```python
 {
-  # any runnable program, python/perl/bash/java, etc. 
   "executor": "python some.py",    
-  # When cuda is set to -1/[]/[-1], ManyTasks will not set 
-  # the environment variable CUDA_VISIBLE_DEVICES. 
-  "cuda": [0, 1],
-  # How many processes will be run in parallel?
-  #     - "#CPU" (number of CPUs)
-  #     - "#CUDA" (number of CUDA devices)
-  #     - an integer  
-  "concurrency": 2,
+  "cuda": [4, 5, 6, 7],
+  "concurrency": 4,           # num of tasks to run in parallel
+  "cuda_per_task": 1,
   "configs": {
     # basic configurations
     "==base==": [          
-      # an arg without a key
       "arg0",
-      # a list of values
       "--a", [50, 100],
-      # use "...$<PYTHON SCRIPTS>..." to produce a list
-      "-b", "$<range(10)>",
-      # use "...${key}..." to refer to an arg
-      "--name", "a_${--a}_b_${-b}"
+      "-b", "$<range(10)>",   # "$<PYTHON SCRIPTS>" produces a list
+      "--name", "a_${--a}"    # "${key}" refers to the value of an arg
     ],
     # more disjoint configurations
     "==more==": [
-      # case 1
-      [
-        "--c1", 1
-      ],
-      # case 2
-      [
-        "--c1", 2
-        "--c2", [3, 4]
-      ],
+      [ "--c1", 1 ],                  # case 1
+      [ "--c1", 2, "--c2", [3, 4] ],  # case 2
     ]
   }
 }
@@ -101,13 +67,13 @@ For more details, see `examples/advanced_configs`.
 
 which yields:
 ```bash
-python some.py arg0 --a 50 --b 0 --name a_50_b_0 --c1 1
-python some.py arg0 --a 50 --b 0 --name a_50_b_0 --c1 2 --c2 3
-python some.py arg0 --a 50 --b 0 --name a_50_b_0 --c1 2 --c2 4
+python some.py arg0 --a 50 --b 0 --name a_50 --c1 1
+python some.py arg0 --a 50 --b 0 --name a_50 --c1 2 --c2 3
+python some.py arg0 --a 50 --b 0 --name a_50 --c1 2 --c2 4
 
-python some.py arg0 --a 50 --b 1 --name a_50_b_0 --c1 1
-python some.py arg0 --a 50 --b 1 --name a_50_b_0 --c1 2 --c2 3
-python some.py arg0 --a 50 --b 1 --name a_50_b_0 --c1 2 --c2 4
+python some.py arg0 --a 50 --b 1 --name a_50 --c1 1
+python some.py arg0 --a 50 --b 1 --name a_50 --c1 2 --c2 3
+python some.py arg0 --a 50 --b 1 --name a_50 --c1 2 --c2 4
 ...
 ```
 
@@ -127,10 +93,25 @@ python some.py arg0 --a 50 --b 1 --name a_50_b_0 --c1 2 --c2 4
 
 **A**: For complex cases when you would like to enjoy their power of hyper-parameter tuning.
 
-## Advanced Usage
+## Analysis
 
-See `Advance Usage.md`.
+See `Analysis.md`.
 
 ## History
 
 See `History.md`.
+
+
+<!-- 
+## Publications Using this Tool
+
+*I'd like to claim that it is very STABLE 😊 and SUITABLE 👍 for research, it will make your skin smoother!*
+
+- **Arxiv 2020**: *Chinese Named Entity Recognition Augmented with Lexicon Memory* (Accepted by **JCST 2022**). 
+- **ACL 2020**: *Evaluating and Enhancing the Robustness of Neural Network-based Dependency Parsing Models with Adversarial Examples*. 
+- **ACL 2021**: *Defense against Synonym Substitution-based Adversarial Attacks via Dirichlet Neighborhood Ensemble*.
+- **WMT 2021**: *The Volctrans GLAT System: Non-autoregressive Translation Meets WMT21*.
+- **EMNLP 2021**: *On the Transferability of Adversarial Attacks against Neural NLP Models*. 
+- **EMNLP 2021**: *Searching for an Effiective Defender: Benchmarking Defense against Adversarial Word Substitution*. 
+- **ACL 2022**: *Towards Adversarially Robust Text Classifiers by Learning to Reweight Clean Examples*. 
+-->

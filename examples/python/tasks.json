@@ -14,14 +14,9 @@
     "cuda_per_task": 1,
     "configs": {
         "==base==": [
-            // You can pass an arg without a key
             "wmt14", 
-            // You can pass a list
             "--arch", ["lstm", "transformer"],
-            // You can even pass a python script which returns an iterable
-            "--layer", "$<range(2,6,2)>",
-            "--fp16",
-            "--fix-embedding", ["$_ON_", "$_OFF_"]
+            "--layer", "$<range(2,6,2)>"
         ],
         "==more==": [
             [

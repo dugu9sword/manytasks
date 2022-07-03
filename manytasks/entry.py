@@ -133,7 +133,7 @@ def preprocess(opt):
     if cuda != -1 and psutil.WINDOWS:
         print("CUDA shoule be -1 on windows")
         exit()
-    if len(cuda) == 0 or cuda == -1:
+    if cuda == -1 or (isinstance(cuda, list) and len(cuda) == 0):
         pass
     else:
         for cuda_id in cuda:
