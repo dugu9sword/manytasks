@@ -23,13 +23,14 @@ def run_task(opt, taskpool: TaskPool, task_idx):
         env = os.environ.copy()
         if opt.cuda == -1:
             cuda_str = "-1"
+            env["CUDA_VISIBLE_DEVICES"] = cuda_str
         elif len(opt.cuda) == 0:
             cuda_str = ""
         else:
             cuda_idxs = cuda_manager.acquire_cuda(opt.cuda_per_task)
             cuda_str = ",".join(list(map(str, cuda_idxs)))
+            env["CUDA_VISIBLE_DEVICES"] = cuda_str
 
-        env["CUDA_VISIBLE_DEVICES"] = cuda_str
         callee = task.executor + task.to_callable_args()
 
         width = int(math.log10(len(taskpool))) + 1
