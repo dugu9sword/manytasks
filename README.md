@@ -52,14 +52,14 @@ For more complex cases, see `ADVANCED_CASES.md`.
     # basic configurations
     "==base==": [          
       "arg0",
-      "--a", [50, 100],
-      "-b", "$<range(10)>",   # "$<PYTHON SCRIPTS>" produces a list
-      "--name", "a_${--a}"    # "${key}" refers to the value of an arg
+      "--a", [50, 100],       # `--a` takes value from [50, 100]
+      "--name", "a_${--a}"    # "${--a}" refers to the value of `--a`
     ],
     # more disjoint configurations
     "==more==": [
-      [ "--c1", 1 ],                  # case 1
-      [ "--c1", 2, "--c2", [3, 4] ],  # case 2
+      [ "--c1", 1 ],                # [1]
+      [ "--c2", "$<x|y>.$<3|4>" ],  # [x.3, x.4, y.3, y.4]
+      [ "--c3", "$<range(2)>" ],    # [0, 1]
     ]
   }
 }
@@ -67,14 +67,23 @@ For more complex cases, see `ADVANCED_CASES.md`.
 
 which yields:
 ```bash
-python some.py arg0 --a 50 --b 0 --name a_50 --c1 1
-python some.py arg0 --a 50 --b 0 --name a_50 --c1 2 --c2 3
-python some.py arg0 --a 50 --b 0 --name a_50 --c1 2 --c2 4
-
-python some.py arg0 --a 50 --b 1 --name a_50 --c1 1
-python some.py arg0 --a 50 --b 1 --name a_50 --c1 2 --c2 3
-python some.py arg0 --a 50 --b 1 --name a_50 --c1 2 --c2 4
-...
+---  ----  ---  ------  ----  ----  ----
+idx  __1   --a  --name  --c1  --c2  --c3
+0    arg0  50   a_50    1     -     -
+1    arg0  100  a_100   1     -     -
+2    arg0  50   a_50    -     x.3   -
+3    arg0  50   a_50    -     x.4   -
+4    arg0  50   a_50    -     y.3   -
+5    arg0  50   a_50    -     y.4   -
+6    arg0  100  a_100   -     x.3   -
+7    arg0  100  a_100   -     x.4   -
+8    arg0  100  a_100   -     y.3   -
+9    arg0  100  a_100   -     y.4   -
+10   arg0  50   a_50    -     -     0
+11   arg0  50   a_50    -     -     1
+12   arg0  100  a_100   -     -     0
+13   arg0  100  a_100   -     -     1
+---  ----  ---  ------  ----  ----  ----
 ```
 
 ## Design Philosophy
