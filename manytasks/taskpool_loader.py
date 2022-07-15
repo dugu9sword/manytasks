@@ -63,7 +63,7 @@ def parse_config(cfg_name, config: list) -> List[Tuple[str, List]]:
             if isinstance(ele, list):
                 values = ele
             if isinstance(ele, str):
-                values = parse_string(ele) 
+                values = parse_string(ele)
             if pending_key:
                 ret.append((pending_key, values))
                 pending_key = None
@@ -94,6 +94,7 @@ def parse_string(string):
             break
         
         enum_repr = found.group()
+        enum_start, enum_end = found.start(), found.end()
 
         while "SWITCH":
             # Case I
@@ -131,7 +132,7 @@ def parse_string(string):
 
             break
 
-        string = string.replace(enum_repr, f'🔢<{enum_idx}>')
+        string = string[:enum_start] + f"#ENUM<{enum_idx}>" + string[enum_end:]
         enum_lists.append(enum_list)
         enum_idx += 1
         
@@ -144,9 +145,9 @@ def parse_string(string):
         for i in range(len(enum_product)):
             tmp = string
             for eid in range(enum_idx):
-                tmp = tmp.replace(f'🔢<{eid}>', str(enum_product[i][eid]))
-            ret.append(tmp)   
-        
+                tmp = tmp.replace(f'#ENUM<{eid}>', str(enum_product[i][eid]))
+            ret.append(tmp)
+
     return ret
 
 
