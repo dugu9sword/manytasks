@@ -28,31 +28,31 @@ def parse_opt():
 
     # create a config/rule file
     init_mode = subparsers.add_parser("init")
-    init_mode.add_argument(              dest="template",    action="store", default="",   type=str,   choices=["config", "rule"],
+    init_mode.add_argument(                    dest="template",    action="store", default="",   type=str,   choices=["config", "rule"],
                             help="Generate a template file, `config` for running tasks and `rule` for log extraction.")
 
     # run a config file
     run_mode = subparsers.add_parser("run")
-    run_mode.add_argument(               dest="config_path", action="store", default="",   type=str,   
+    run_mode.add_argument(                     dest="config_path", action="store", default="",   type=str,   
                             help="Specify the config path such as 'config_name.json', " 
                                 + "where the suffix '.json' can be omitted in case that it is in the current directory.")
-    run_mode.add_argument("--log-path",  dest="log_path",    action="store", default="",   type=str,   
+    run_mode.add_argument("--log-path",  "-p", dest="log_path",    action="store", default="",   type=str,   
                             help="Specify the log path. " 
                                 + "The path will be 'config_name.logs' in case that it is not specified.")
-    run_mode.add_argument("--override",  dest="override",    action="store_true",                      
+    run_mode.add_argument("--override",  "-o", dest="override",    action="store_true",                      
                             help="Whether to force override existing logs. ")
-    run_mode.add_argument("--resume",    dest="resume",      action="store_true",                      
+    run_mode.add_argument("--resume",    "-r", dest="resume",      action="store_true",                      
                             help="Whether to resume from existing logs. "
                                 + "Only tasks that are failed will be runned again.")
-    run_mode.add_argument("--random-exe",dest="random_exe",  action="store_true",                      
+    run_mode.add_argument("--random-exe","-e", dest="random_exe",  action="store_true",                      
                             help="Whether tasks are executed randomly. ")
-    run_mode.add_argument("--dry",       dest="dry",         action="store_true",                      
+    run_mode.add_argument("--dry",       "-d", dest="dry",         action="store_true",                      
                             help="Just print all tasks to run instead of running them. ")
-    run_mode.add_argument("--latency",   dest="latency",     action="store", default=1,    type=int,   
+    run_mode.add_argument("--latency",   "-l", dest="latency",     action="store", default=1,    type=int,   
                             help="Time (seconds) between execution of two tasks ." 
                                 + "This can be useful if executing tasks too frequently will cause some errors, \n"
                                 + "such as downloading many files from a server too frequently.")
-    run_mode.add_argument("--timeout",   dest="timeout",     action="store", default=None, type=str,   
+    run_mode.add_argument("--timeout",   "-t", dest="timeout",     action="store", default=None, type=str,   
                             help="Timeout of a task (9S, 5m, 3H, 4d, etc.). "
                                + "This can be useful if a task is not expected to run for too long time. "
                                + "The 'early stop' strategy can help you explore more settings. "
