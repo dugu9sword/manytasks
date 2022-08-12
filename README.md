@@ -57,9 +57,9 @@ For more complex cases, see `ADVANCED_CASES.md`.
     ],
     # more disjoint configurations
     "==more==": [
-      [ "--c1", 1 ],                # [1]
-      [ "--c2", "$<x|y>.$<3|4>" ],  # [x.3, x.4, y.3, y.4]
-      [ "--c3", "$<range(2)>" ],    # [0, 1]
+      [ "--c1", [1, 2] ],            # [1, 2]
+      [ "--c2", "$<x|y>.$<1:4>" ],   # [x.1, x.2, x.3,
+        							 #  y.1, y.2, y.3]
     ]
   }
 }
@@ -67,24 +67,45 @@ For more complex cases, see `ADVANCED_CASES.md`.
 
 which yields:
 ```bash
----  ----  ---  ------  ----  ----  ----
-idx  __1   --a  --name  --c1  --c2  --c3
-0    arg0  50   a_50    1     -     -
-1    arg0  100  a_100   1     -     -
-2    arg0  50   a_50    -     x.3   -
-3    arg0  50   a_50    -     x.4   -
-4    arg0  50   a_50    -     y.3   -
-5    arg0  50   a_50    -     y.4   -
-6    arg0  100  a_100   -     x.3   -
-7    arg0  100  a_100   -     x.4   -
-8    arg0  100  a_100   -     y.3   -
-9    arg0  100  a_100   -     y.4   -
-10   arg0  50   a_50    -     -     0
-11   arg0  50   a_50    -     -     1
-12   arg0  100  a_100   -     -     0
-13   arg0  100  a_100   -     -     1
----  ----  ---  ------  ----  ----  ----
+---  ----  ---  ------  ----  ----
+idx  __1   --a  --name  --c1  --c2
+0    arg0  50   a_50    1     -
+1    arg0  50   a_50    2     -
+2    arg0  100  a_100   1     -
+3    arg0  100  a_100   2     -
+4    arg0  50   a_50    -     x.1
+5    arg0  50   a_50    -     x.2
+6    arg0  50   a_50    -     x.3
+7    arg0  50   a_50    -     y.1
+8    arg0  50   a_50    -     y.2
+9    arg0  50   a_50    -     y.3
+10   arg0  100  a_100   -     x.1
+11   arg0  100  a_100   -     x.2
+12   arg0  100  a_100   -     x.3
+13   arg0  100  a_100   -     y.1
+14   arg0  100  a_100   -     y.2
+15   arg0  100  a_100   -     y.3
+---  ----  ---  ------  ----  ----
 ```
+
+### Syntax Sugar
+
+The syntax sugar makes the enumeration of arguments more easier.
+
+| Type                     | Example Input                | Example Output                             |
+| ------------------------ | ---------------------------- | ------------------------------------------ |
+| **list**                 | `$<1:6>`                     | `[1, 2, 3, 4, 5]`                          |
+| **list** (with step)     | `$<1:6:2>`                   | `[1, 3, 5]`                                |
+| **list** (with zero-pad) | `$<1:6:2;3>`                | `[001, 003, 005]`                          |
+| **set**          | `$<a\|b\|c>`               | `[a, b, c]`                                |
+| **script**         | `$<range(3,6)>`              | `[3, 4, 5]`                                |
+| **script** (more) | `$<open("foo").readlines()>` | `it depends.`                              |
+| **composition** | `x_$<1:3;3>.txt` | `[x_001.txt, x_002.txt]` |
+| **composition** (more) | `logs/$<a\|b>.$<1:3>`         | `[logs/a.1, logs/a.2, logs/b.1, logs/b.2]` |
+
+
+
+
 
 ## Design Philosophy
 
@@ -109,18 +130,3 @@ See `Analysis.md`.
 ## History
 
 See `History.md`.
-
-
-<!-- 
-## Publications Using this Tool
-
-*I'd like to claim that it is very STABLE 😊 and SUITABLE 👍 for research, it will make your skin smoother!*
-
-- **Arxiv 2020**: *Chinese Named Entity Recognition Augmented with Lexicon Memory* (Accepted by **JCST 2022**). 
-- **ACL 2020**: *Evaluating and Enhancing the Robustness of Neural Network-based Dependency Parsing Models with Adversarial Examples*. 
-- **ACL 2021**: *Defense against Synonym Substitution-based Adversarial Attacks via Dirichlet Neighborhood Ensemble*.
-- **WMT 2021**: *The Volctrans GLAT System: Non-autoregressive Translation Meets WMT21*.
-- **EMNLP 2021**: *On the Transferability of Adversarial Attacks against Neural NLP Models*. 
-- **EMNLP 2021**: *Searching for an Effiective Defender: Benchmarking Defense against Adversarial Word Substitution*. 
-- **ACL 2022**: *Towards Adversarially Robust Text Classifiers by Learning to Reweight Clean Examples*. 
--->
