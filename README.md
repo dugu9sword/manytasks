@@ -6,6 +6,7 @@ A lightweight tool for deploying many tasks automatically, without any modificat
   - [Installation](#installation)
   - [Quick Example](#quick-example)
   - [Sample Configuration](#sample-configuration)
+    - [Syntax Sugar](#syntax-sugar)
   - [Design Philosophy](#design-philosophy)
   - [Analysis](#analysis)
   - [History](#history)
@@ -97,8 +98,6 @@ The syntax sugar makes the enumeration of arguments more easier.
 | **list** (with step)     | `$<1:6:2>`                   | `[1, 3, 5]`                                |
 | **list** (with zero-pad) | `$<1:6:2;3>`                | `[001, 003, 005]`                          |
 | **set**          | `$<a\|b\|c>`               | `[a, b, c]`                                |
-| **script**         | `$<range(3,6)>`              | `[3, 4, 5]`                                |
-| **script** (more) | `$<open("foo").readlines()>` | `it depends.`                              |
 | **composition** | `x_$<1:3;3>.txt` | `[x_001.txt, x_002.txt]` |
 | **composition** (more) | `logs/$<a\|b>.$<1:3>`         | `[logs/a.1, logs/a.2, logs/b.1, logs/b.2]` |
 

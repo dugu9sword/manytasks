@@ -16,7 +16,7 @@
         "==base==": [
             "wmt14", 
             "--arch", ["lstm", "transformer"],
-            "--layer", "$<range(2,6,2)>"
+            "--layer", "$<2:6:2>"
         ],
         "==more==": [
             [

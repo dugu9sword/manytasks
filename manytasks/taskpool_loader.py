@@ -34,7 +34,7 @@ def parse_config(cfg_name, config: list) -> List[Tuple[str, List]]:
         Input:  parse_config(None, [
                     "data",
                     "--multigpu",
-                    "--fp16", ["$_ON_", "$_OFF_"],
+                    "--fp16", "$<?>",
                     "--a", [1, 2],
                     "-b", "$<1:4>"
                 ])
@@ -82,8 +82,7 @@ def parse_string(string):
             print(parse_string("$<1:4>"))
             print(parse_string("$<a|b|c>"))
             print(parse_string("$<a|b|c>.$<1:4>"))
-            print(parse_string("$<[f'{i:03}' for i in range(1, 10, 2)]>"))
-            print(parse_string("$<os.listdir()>"))
+            print(parse_string("$<?>"))
     """
     enum_lists = []
     enum_idx = 0
@@ -98,6 +97,12 @@ def parse_string(string):
 
         while "SWITCH":
             # Case I
+            #   $<?>
+            if enum_repr.strip() == "$<?>":
+                enum_list = [Reserved.ON, Reserved.OFF]
+                break
+
+            # Case II
             #   $<start:end:[step]:[zfill]>
             found = re.search(r"^(-?\d+)(:-?\d+)(:-?\d+)?(;\d+)?$", enum_repr[2:-1])
             if found:
@@ -115,20 +120,12 @@ def parse_string(string):
                     enum_list = list(str(i) for i in r)
                 break
 
-            # Case II
+            # Case III
             #   $<a|b|c|d>
             found = re.search(r"^([^|]+\|)+[^|]+$", enum_repr[2:-1])
             if found:
                 enum_list = enum_repr[2:-1].split("|")
                 break
-
-            # Case Fallback
-            #   $<python-script>
-            try:
-                enum_list = list(eval(enum_repr[2:-1]))
-            except Exception:
-                print("Error occurs when parsing {}: {}!".format(string, enum_repr))
-                exit(1)
 
             break
 

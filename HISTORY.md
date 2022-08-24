@@ -1,5 +1,9 @@
 # History
 
+**2022.8.24**, Small changes.
+- Remove support for python script.
+- Use `$<?>` as a value to denote set a `--flag` or not.
+
 **2022.8.12**, Small changes, new release `2.0`.
 
 - [x] Better `README`.
