@@ -1,11 +1,16 @@
 from setuptools import setup, find_packages
+from pathlib import Path
+
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="manytasks",
-    version="2.0.alpha",
+    version="2.0",
     keywords=["manytasks", ],
-    description="eds sdk",
-    long_description="A tool for deploying many tasks automatically.",
+    description="A tool for deploying many tasks automatically.",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     license="WTFPL Licence",
 
     url="https://github.com/dugu9sword/manytasks",

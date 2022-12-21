@@ -34,7 +34,7 @@ def parse_config(cfg_name, config: list) -> List[Tuple[str, List]]:
         Input:  parse_config(None, [
                     "data",
                     "--multigpu",
-                    "--fp16", ["$_ON_", "$_OFF_"],
+                    "--fp16", "$<?>",
                     "--a", [1, 2],
                     "-b", "$<1:4>"
                 ])
@@ -63,7 +63,7 @@ def parse_config(cfg_name, config: list) -> List[Tuple[str, List]]:
             if isinstance(ele, list):
                 values = ele
             if isinstance(ele, str):
-                values = parse_string(ele) 
+                values = parse_string(ele)
             if pending_key:
                 ret.append((pending_key, values))
                 pending_key = None
@@ -82,8 +82,7 @@ def parse_string(string):
             print(parse_string("$<1:4>"))
             print(parse_string("$<a|b|c>"))
             print(parse_string("$<a|b|c>.$<1:4>"))
-            print(parse_string("$<[f'{i:03}' for i in range(1, 10, 2)]>"))
-            print(parse_string("$<os.listdir()>"))
+            print(parse_string("$<?>"))
     """
     enum_lists = []
     enum_idx = 0
@@ -94,9 +93,16 @@ def parse_string(string):
             break
         
         enum_repr = found.group()
+        enum_start, enum_end = found.start(), found.end()
 
         while "SWITCH":
             # Case I
+            #   $<?>
+            if enum_repr.strip() == "$<?>":
+                enum_list = [Reserved.ON, Reserved.OFF]
+                break
+
+            # Case II
             #   $<start:end:[step]:[zfill]>
             found = re.search(r"^(-?\d+)(:-?\d+)(:-?\d+)?(;\d+)?$", enum_repr[2:-1])
             if found:
@@ -114,24 +120,16 @@ def parse_string(string):
                     enum_list = list(str(i) for i in r)
                 break
 
-            # Case II
+            # Case III
             #   $<a|b|c|d>
             found = re.search(r"^([^|]+\|)+[^|]+$", enum_repr[2:-1])
             if found:
                 enum_list = enum_repr[2:-1].split("|")
                 break
 
-            # Case Fallback
-            #   $<python-script>
-            try:
-                enum_list = list(eval(enum_repr[2:-1]))
-            except Exception:
-                print("Error occurs when parsing {}: {}!".format(string, enum_repr))
-                exit(1)
-
             break
 
-        string = string.replace(enum_repr, f'🔢<{enum_idx}>')
+        string = string[:enum_start] + f"#ENUM<{enum_idx}>" + string[enum_end:]
         enum_lists.append(enum_list)
         enum_idx += 1
         
@@ -144,9 +142,9 @@ def parse_string(string):
         for i in range(len(enum_product)):
             tmp = string
             for eid in range(enum_idx):
-                tmp = tmp.replace(f'🔢<{eid}>', str(enum_product[i][eid]))
-            ret.append(tmp)   
-        
+                tmp = tmp.replace(f'#ENUM<{eid}>', str(enum_product[i][eid]))
+            ret.append(tmp)
+
     return ret
 
 

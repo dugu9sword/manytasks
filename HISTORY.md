@@ -1,6 +1,14 @@
 # History
 
-**2022.7.3**, Big changes.
+**2022.8.24**, Small changes.
+- Remove support for python script.
+- Use `$<?>` as a value to denote set a `--flag` or not.
+
+**2022.8.12**, Small changes, new release `2.0`.
+
+- [x] Better `README`.
+
+**2022.7.3**, Big changes, release `2.0.alpha`.
 
 - [x] Support for magic expression in config expansion such as `$<1:10:2>` and `$<a|b|c>`.
 - [x] Support for easier combination of magic expressions, such as `$<a|b|c>.$<1:10:2>`.
