@@ -31,6 +31,15 @@ def current_time():
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
 
+def human_readable_time_delta(x):
+    x = int(x)
+    h = x // (60 * 60)
+    x = x % (60 * 60)
+    m = x // 60
+    s = x % 60
+    return f"{h:02}:{m:02}:{s:02}"
+
+
 def draw_logo():
     log("""
     =================================================================

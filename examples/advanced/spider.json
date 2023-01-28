@@ -6,7 +6,7 @@
     "configs": {
         "==base==": [
             "--from", "http://ftp.abc.com/shard.$<en|de>.$<1:15;2>.txt",
-            "--to", "Downloads/${--from[25:30]}"
+            "--to", "Downloads/${from[25:30]}"
         ],
         "==more==": []
     }

@@ -1,8 +1,13 @@
 # History
 
+**2023.1.28**, Big changes. (Still under development)
+- [x] Better support for arg reference
+- [x] Support for time cost
+- [ ] Better support for passing (non-key) arguments
+
 **2022.8.24**, Small changes.
-- Remove support for python script.
-- Use `$<?>` as a value to denote set a `--flag` or not.
+- [x] Remove support for python script.
+- [x] Use `$<?>` as a value to denote set a `--flag` or not.
 
 **2022.8.12**, Small changes, new release `2.0`.
 

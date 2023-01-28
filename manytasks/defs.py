@@ -1,4 +1,5 @@
 import random
+import re
 from typing import List
 
 
@@ -32,8 +33,17 @@ class Task:
             ret.append(arg.value)
         return ret
 
+    def smart_key(self, key):
+        if re.match(r"\d+", key):
+            return f"__{key}"
+        if f"-{key}" in self.keys:
+            return f"-{key}"
+        if f"--{key}" in self.keys:
+            return f"--{key}"
+        return None
+
     def __contains__(self, key):
-        return key in self.keys
+        return self.smart_key(key) is not None
 
     def __setitem__(self, key, value):
         self.args[self.keys.index(key)].value = value

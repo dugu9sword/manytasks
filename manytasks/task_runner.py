@@ -10,7 +10,7 @@ from pathlib import Path
 
 from manytasks import cuda_manager
 from manytasks.defs import Mode, Status, TaskPool
-from manytasks.util import (current_time, draw_logo, log, log_config,
+from manytasks.util import (current_time, human_readable_time_delta, draw_logo, log, log_config,
                             show_task_list)
 
 
@@ -43,6 +43,7 @@ def run_task(opt, taskpool: TaskPool, task_idx):
         cuda_status = "| CUDA {}".format(cuda_str) if cuda_str != "" else ""
         pid_status = "| PID {:<8}".format(p.pid)
         status = " START {} {} {}".format(task_info, cuda_status, pid_status)
+        start_time = time.time()
         log("{} [{}] {} : {}".format("👉", current_time(), status,
                                      task.to_finalized_cmd()))
 
@@ -58,9 +59,10 @@ def run_task(opt, taskpool: TaskPool, task_idx):
                     ret = 0
                 else:
                     ret = -1926
-        cuda_status = "| CUDA {}".format(cuda_str) if cuda_str != "" else ""
-        ret_status = "| RET {:<8}".format(ret)
-        status = "FINISH {} {} {}".format(task_info, cuda_status, ret_status)
+        # cuda_status = "| CUDA {}".format(cuda_str) if cuda_str != "" else ""
+        ret_status = "| RET {:<2}".format(ret)
+        cost_time = "| COST {}".format(human_readable_time_delta(time.time() - start_time))
+        status = "FINISH {} {} {}".format(task_info, cost_time, ret_status)
         log("{} [{}] {} : {}".format(
             defaultdict(lambda: "❌", {
                 0: "✅",

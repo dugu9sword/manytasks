@@ -54,7 +54,7 @@ For more complex cases, see `ADVANCED_CASES.md`.
     "==base==": [          
       "arg0",
       "--a", [50, 100],       # `--a` takes value from [50, 100]
-      "--name", "a_${--a}"    # "${--a}" refers to the value of `--a`
+      "--name", "a_${a}"      # "${a}" refers to the value of `--a`
     ],
     # more disjoint configurations
     "==more==": [

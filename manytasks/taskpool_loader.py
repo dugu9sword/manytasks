@@ -166,6 +166,7 @@ def apply_arg_reference(tasks: List[Task]):
     for task in tasks:
         for arg in task:
             key, val = arg.key, arg.value
+            # print("processing", key, val)
             while True:
                 found = re.search(r"\$\{[^}]+\}", val)
                 if not found:
@@ -173,19 +174,21 @@ def apply_arg_reference(tasks: List[Task]):
                 arg_ref = found.group()
 
                 while "SWITCH":
-                    # Case I: ${--key[start_idx:end_idx]}
+                    # Case I: ${key[start_idx:end_idx]}
                     found = re.search(r"^([^\[]+)\[(\d*):(-?\d*)\]$", arg_ref[2:-1])
                     if found:
                         refered_key = found.group(1)
+                        refered_key = task.smart_key(refered_key)
                         start_idx = int(found.group(2)) if found.group(2) else 0
                         end_idx = int(found.group(3)) if found.group(3) else None
                         new_val = task[refered_key][start_idx:end_idx]
                         break
                     
-                    # Case II: ${--key[pattern1:val1,pattern2:val2,_:default]}
+                    # Case II: ${key[pattern1:val1,pattern2:val2,_:default]}
                     found = re.search(r"^([^\[]+)\[((([^:]+):([^,]+))+)\]$", arg_ref[2:-1])
                     if found:
                         refered_key, pairs = found.group(1), found.group(2)
+                        refered_key = task.smart_key(refered_key)
                         refered_val = task[refered_key]
                         pairs = dict(re.findall(r"([^:]+):([^,]+),?", pairs))
                         if "_" in pairs:
@@ -193,8 +196,10 @@ def apply_arg_reference(tasks: List[Task]):
                         new_val = pairs[refered_val]
                         break
                     
-                    # arg_ref ~ key
-                    new_val = task[arg_ref[2:-1]]
+                    # Case III: ${key}
+                    refered_key = arg_ref[2:-1]
+                    refered_key = task.smart_key(refered_key)
+                    new_val = task[refered_key]
                     break
                 val = val.replace(arg_ref, new_val)
             task[key] = val
