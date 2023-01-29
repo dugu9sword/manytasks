@@ -36,6 +36,8 @@ class Task:
     def smart_key(self, key):
         if re.match(r"\d+", key):
             return f"__{key}"
+        if re.match(r"\d+\.\d+", key):
+            return f"__{key}"
         if f"-{key}" in self.keys:
             return f"-{key}"
         if f"--{key}" in self.keys:

@@ -211,7 +211,7 @@ def load_taskpool(path):
     base_conf = parse_config(None, config["configs"]["==base=="])
     more_confs = []
     for mid, more_conf in enumerate(config["configs"]["==more=="]):
-        more_confs.append(parse_config("m{}".format(mid), more_conf))
+        more_confs.append(parse_config(mid, more_conf))
     if len(more_confs) == 0:
         more_confs = [[]]
     tasks = []
