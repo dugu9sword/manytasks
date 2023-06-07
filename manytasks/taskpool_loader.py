@@ -1,5 +1,6 @@
 import itertools
 import re
+import glob
 from typing import List, Tuple
 from collections import defaultdict
 
@@ -127,7 +128,21 @@ def parse_string(string):
                 enum_list = enum_repr[2:-1].split("|")
                 break
 
-            break
+            # Case IV
+            #   $<files:manytasks/*.py>
+            found = re.search(r"^files:(.*)$", enum_repr[2:-1])
+            if found:
+                enum_list = glob.glob(found.group(1))
+                break
+
+            # Case V
+            #   $<lines:lines.txt>
+            found = re.search(r"^lines:(.*)$", enum_repr[2:-1])
+            if found:
+                enum_list = open(found.group(1)).readlines()
+                enum_list = [ele.strip() for ele in enum_list]
+                enum_list = [ele for ele in enum_list if ele != ""]
+                break
 
         string = string[:enum_start] + f"#ENUM<{enum_idx}>" + string[enum_end:]
         enum_lists.append(enum_list)

@@ -26,7 +26,13 @@
             ],
             [
                 "x",
-                "--save", "ckpts/${1}/${4.1}",
+                "--save", "ckpts/${1}/${4.1}"
+            ],
+            [
+                "--save", "$<lines:urls.txt>"
+            ],
+            [
+                "--save", "$<files:*.json>"
             ]
         ]
     }
