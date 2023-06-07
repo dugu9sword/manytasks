@@ -97,7 +97,8 @@ The syntax sugar makes the enumeration of arguments more easier.
 | **list**                 | `$<1:6>`                     | `[1, 2, 3, 4, 5]`                          |
 | **list** (with step)     | `$<1:6:2>`                   | `[1, 3, 5]`                                |
 | **list** (with zero-pad) | `$<1:6:2;3>`                | `[001, 003, 005]`                          |
-| **files**                | `$<files:/home/*.py>`       | `[foo.py, bar.py, ...]`                     |
+| **files**                | `$<files:/home/*.py>`       | `[/home/foo.py, /home/bar.py, ...]`                     |
+| **files** (without path) | `$<files:/home/*.py;nameonly>`  | `[foo.py, bar.py, ...]`                     |
 | **lines**                | `$<lines:urls.txt>`         | `[baidu.com, google.com, ...]`              |
 | **set**          | `$<a\|b\|c>`               | `[a, b, c]`                                |
 | **composition** | `x_$<1:3;3>.txt` | `[x_001.txt, x_002.txt]` |

@@ -32,7 +32,10 @@
                 "--save", "$<lines:urls.txt>"
             ],
             [
-                "--save", "$<files:*.json>"
+                "--save", "$<files:../bash/*.sh>"
+            ],
+            [
+                "--save", "$<files:../bash/*.sh;nameonly>"
             ]
         ]
     }

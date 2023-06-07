@@ -1,5 +1,6 @@
 import itertools
 import re
+import os
 import glob
 from typing import List, Tuple
 from collections import defaultdict
@@ -104,7 +105,7 @@ def parse_string(string):
                 break
 
             # Case II
-            #   $<start:end:[step]:[zfill]>
+            #   $<start:end:[step];[zfill]>
             found = re.search(r"^(-?\d+)(:-?\d+)(:-?\d+)?(;\d+)?$", enum_repr[2:-1])
             if found:
                 start = int(found.group(1))
@@ -130,9 +131,11 @@ def parse_string(string):
 
             # Case IV
             #   $<files:manytasks/*.py>
-            found = re.search(r"^files:(.*)$", enum_repr[2:-1])
+            found = re.search(r"^files:([^;]*)(;nameonly)?$", enum_repr[2:-1])
             if found:
                 enum_list = glob.glob(found.group(1))
+                if found.group(2) is not None:
+                    enum_list = [os.path.basename(ele) for ele in enum_list]
                 break
 
             # Case V
