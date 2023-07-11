@@ -2,6 +2,8 @@ import multiprocessing
 import os
 from argparse import ArgumentParser
 from pathlib import Path
+import re
+import subprocess
 
 import jstyleson
 import psutil
@@ -128,22 +130,40 @@ def preprocess(opt):
     # Initialze cuda manager
     config = jstyleson.load(fp=open(opt.config_path))
     cuda = config["cuda"]
-    opt.cuda = cuda
-    assert isinstance(cuda, list) or cuda == -1
-    if cuda != -1 and psutil.WINDOWS:
+    if cuda == "ALL":
+        opt.cuda = []
+        # example:
+        # GPU 0: Tesla V100-SXM2-32GB (UUID: GPU-******)
+        # GPU 1: Tesla V100-SXM2-32GB (UUID: GPU-******)
+        p = subprocess.run(["nvidia-smi", "-L"], stdout=subprocess.PIPE)
+        nv_out = p.stdout.decode("utf8").split("\n")
+        for line in nv_out:
+            found = re.search(r"GPU\s(\d+):", line)
+            if found is not None:
+                opt.cuda.append(int(found.group(1)))
+    elif cuda == "NO" or cuda == -1:
+        opt.cuda = -1
+    else:
+        assert isinstance(cuda, list) and len(cuda) > 0, \
+        "\nCUDA value can only be: \n" \
+        "\t- ALL: use all cuda devices \n" \
+        "\t- NO/-1: do not use cuda devices \n" \
+        "\t- non-empty list: specify some CUDA devices, e.g., [0, 1, 3, 4] \n"
+
+    if opt.cuda != -1 and psutil.WINDOWS:
         print("CUDA shoule be -1 on windows")
         exit()
-    if cuda == -1 or (isinstance(cuda, list) and len(cuda) == 0):
+    if opt.cuda == -1:
         pass
     else:
-        for cuda_id in cuda:
+        for cuda_id in opt.cuda:
             cuda_manager.num_tasks_on_cuda[cuda_id] = 0
     opt.cuda_per_task = int(config["cuda_per_task"])
 
     # Add opt.concurrency
     if config["concurrency"] == "#CUDA":
-        if cuda[0] != -1:
-            opt.concurrency = len(cuda)
+        if opt.cuda != -1:
+            opt.concurrency = len(opt.cuda)
         else:
             print(
                 "You must specify which CUDA devices you want to use if concurrency is set to #CUDA."
