@@ -1,9 +1,9 @@
 {
     "executor": "python main.py",
     // Which GPUs do you want to use?
-    //     - []          CUDA_VISIBLE_DEVICES="" (not set)
-    //     - -1          CUDA_VISIBLE_DEVICES=-1 (do not use GPU)
+    //     - NO/-1       CUDA_VISIBLE_DEVICES=-1 (do not use GPU)
     //     - [0, 1, 2]   CUDA_VISIBLE_DEVICES=<ManyTasks will allocate device>
+    //     - ALL         CUDA_VISIBLE_DEVICES=<ManyTasks will allocate device>
     "cuda": [0, 1, 2],
     // How many processes will be run in parallel?
     //     - "#CPU" (number of CPUs)

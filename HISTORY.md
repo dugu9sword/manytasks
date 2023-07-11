@@ -1,5 +1,8 @@
 # History
 
+**2023.7.11**, Small changes.
+- [x] Support for "ALL"/"NO" cuda usage.
+
 **2023.6.7**, Small changes.
 - [x] Support for finding files with wildcard, such as `$<files:/home/users/dugu9sword/*.py>`.
 - [x] Support for loading lines from a file, such as `$<lines:/home/users/dugu9sword/all.txt>`.
