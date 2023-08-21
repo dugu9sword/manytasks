@@ -8,6 +8,7 @@ import subprocess
 import jstyleson
 import psutil
 import yaml
+from tabulate import tabulate
 
 from manytasks import cuda_manager
 from manytasks.defs import Mode
@@ -89,6 +90,78 @@ def preprocess(opt):
     else:
         opt.log_path = safe_append(opt.log_path, ".logs")
 
+    # Rewrite opt.timeout
+    if opt.timeout is not None:
+        timeout_num = int(opt.timeout[:-1])
+        timeout_unit = opt.timeout[-1]
+        if timeout_unit in "Ss":
+            opt.timeout = (timeout_num, timeout_unit == "S")
+        elif timeout_unit in "Mm":
+            opt.timeout = (timeout_num * 60, timeout_unit == "M")
+        elif timeout_unit in "Hh":
+            opt.timeout = (timeout_num * 3600, timeout_unit == "H")
+        elif timeout_unit in "Dd":
+            opt.timeout = (timeout_num * 3600 * 24, timeout_unit == "D")
+        else:
+            raise Exception
+
+    # Initialze cuda manager
+    config = jstyleson.load(fp=open(opt.config_path))
+    CUDA_INFO = "\nCUDA value can only be: \n" \
+                "\t- ALL: use all cuda devices \n" \
+                "\t- NO: do not use cuda devices \n" \
+                "\t- non-empty list: specify some CUDA devices, e.g., [0, 1, 3, 4] \n"
+    cuda = config["cuda"]
+    if cuda == "ALL":
+        opt.cuda = []
+        # example:
+        # GPU 0: Tesla V100-SXM2-32GB (UUID: GPU-******)
+        # GPU 1: Tesla V100-SXM2-32GB (UUID: GPU-******)
+        p = subprocess.run(["nvidia-smi", "-L"], stdout=subprocess.PIPE)
+        nv_out = p.stdout.decode("utf8").split("\n")
+        for line in nv_out:
+            found = re.search(r"GPU\s(\d+):", line)
+            if found is not None:
+                opt.cuda.append(int(found.group(1)))
+    elif cuda == "NO":
+        opt.cuda = "NO"
+    else:
+        assert isinstance(cuda, list) and len(cuda) > 0, CUDA_INFO
+        opt.cuda = cuda
+
+    if opt.cuda != "NO" and psutil.WINDOWS:
+        print("CUDA shoule be 'NO' on windows")
+        exit()
+    if opt.cuda != "NO":
+        for cuda_id in opt.cuda:
+            cuda_manager.num_tasks_on_cuda[cuda_id] = 0
+
+    if opt.cuda == "NO":
+        opt.cuda_per_task = 0
+    else:
+        opt.cuda_per_task = int(config["cuda_per_task"])
+    
+
+    # Add opt.concurrency
+    if config["concurrency"] == "#CUDA":
+        assert opt.cuda != "NO", \
+            "You must specify the CUDA devices you want to use if concurrency is set to #CUDA.\n" + CUDA_INFO
+        assert len(opt.cuda) >= opt.cuda_per_task, \
+            f"{len(opt.cuda)} CUDA devices available, less than requested number for each task {opt.cuda_per_task}\n" + CUDA_INFO
+        opt.concurrency = len(opt.cuda) // opt.cuda_per_task
+    elif config["concurrency"] == "#CPU":
+        opt.concurrency = max(1, multiprocessing.cpu_count() - 1)
+    else:
+        opt.concurrency = int(config["concurrency"])
+
+    table = [
+        ["Which CUDA devices will be used?", str(opt.cuda)],
+        ["How many CUDA devices will each task use?", opt.cuda_per_task],
+        ["How many tasks will be run inparallel?", opt.concurrency],
+    ]
+    print(tabulate(table, headers=["Question", "Answer"]))
+    print()
+
     # Add opt.run_mode
     assert not (
         opt.resume and opt.override
@@ -111,69 +184,6 @@ def preprocess(opt):
             exit()
     else:
         opt.run_mode = Mode.NORMAL
-
-    # Rewrite opt.timeout
-    if opt.timeout is not None:
-        timeout_num = int(opt.timeout[:-1])
-        timeout_unit = opt.timeout[-1]
-        if timeout_unit in "Ss":
-            opt.timeout = (timeout_num, timeout_unit == "S")
-        elif timeout_unit in "Mm":
-            opt.timeout = (timeout_num * 60, timeout_unit == "M")
-        elif timeout_unit in "Hh":
-            opt.timeout = (timeout_num * 3600, timeout_unit == "H")
-        elif timeout_unit in "Dd":
-            opt.timeout = (timeout_num * 3600 * 24, timeout_unit == "D")
-        else:
-            raise Exception
-
-    # Initialze cuda manager
-    config = jstyleson.load(fp=open(opt.config_path))
-    cuda = config["cuda"]
-    if cuda == "ALL":
-        opt.cuda = []
-        # example:
-        # GPU 0: Tesla V100-SXM2-32GB (UUID: GPU-******)
-        # GPU 1: Tesla V100-SXM2-32GB (UUID: GPU-******)
-        p = subprocess.run(["nvidia-smi", "-L"], stdout=subprocess.PIPE)
-        nv_out = p.stdout.decode("utf8").split("\n")
-        for line in nv_out:
-            found = re.search(r"GPU\s(\d+):", line)
-            if found is not None:
-                opt.cuda.append(int(found.group(1)))
-    elif cuda == "NO" or cuda == -1:
-        opt.cuda = -1
-    else:
-        assert isinstance(cuda, list) and len(cuda) > 0, \
-        "\nCUDA value can only be: \n" \
-        "\t- ALL: use all cuda devices \n" \
-        "\t- NO/-1: do not use cuda devices \n" \
-        "\t- non-empty list: specify some CUDA devices, e.g., [0, 1, 3, 4] \n"
-
-    if opt.cuda != -1 and psutil.WINDOWS:
-        print("CUDA shoule be -1 on windows")
-        exit()
-    if opt.cuda == -1:
-        pass
-    else:
-        for cuda_id in opt.cuda:
-            cuda_manager.num_tasks_on_cuda[cuda_id] = 0
-    opt.cuda_per_task = int(config["cuda_per_task"])
-
-    # Add opt.concurrency
-    if config["concurrency"] == "#CUDA":
-        if opt.cuda != -1:
-            opt.concurrency = len(opt.cuda)
-        else:
-            print(
-                "You must specify which CUDA devices you want to use if concurrency is set to #CUDA."
-            )
-            exit()
-    elif config["concurrency"] == "#CPU":
-        opt.concurrency = max(1, multiprocessing.cpu_count() - 1)
-    else:
-        opt.concurrency = int(config["concurrency"])
-
 
 def main():
     opt = parse_opt()

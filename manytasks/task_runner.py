@@ -21,7 +21,7 @@ def run_task(opt, taskpool: TaskPool, task_idx):
 
     with open("{}/task-{}.txt".format(opt.log_path, task_idx), 'w') as output:
         env = os.environ.copy()
-        if opt.cuda == -1:
+        if opt.cuda == "NO":
             cuda_str = "-1"
             env["CUDA_VISIBLE_DEVICES"] = cuda_str
         elif len(opt.cuda) == 0:

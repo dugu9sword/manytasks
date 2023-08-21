@@ -1,5 +1,9 @@
 # History
 
+**2023.8.21**, Small changes.
+- [x] Modification of "#CUDA" behaviour, inducing the number of tasks to run in parallel.
+- [x] Support for outputing some running statistics.
+
 **2023.7.11**, Small changes.
 - [x] Support for "ALL"/"NO" cuda usage.
 
