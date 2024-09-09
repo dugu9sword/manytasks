@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="manytasks",
-    version="2.2",
+    version="2.3",
     keywords=["manytasks", ],
     description="A tool for deploying many tasks automatically.",
     long_description=long_description,
