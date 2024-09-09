@@ -15,8 +15,6 @@ from manytasks.util import (current_time, human_readable_time_delta, draw_logo, 
 
 
 def run_task(opt, taskpool: TaskPool, task_idx):
-    if opt.latency:
-        time.sleep(opt.latency)
     task = taskpool[task_idx]
 
     with open("{}/task-{}.txt".format(opt.log_path, task_idx), 'w') as output:
@@ -97,6 +95,8 @@ def start_execution(opt, taskpool: TaskPool):
                     break
                 next_idx, next_task = taskpool.get_next_task()
                 if next_task.status != Status.SUCCESS:
+                    if opt.latency:
+                        time.sleep(opt.latency)
                     futures[next_idx] = executor.submit(run_task, opt, taskpool, next_idx)
     log("DONE! (total={}, success={}, fail={})".format(len(taskpool), taskpool.num_success(), taskpool.num_failed()))
 
