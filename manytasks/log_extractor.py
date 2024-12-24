@@ -54,7 +54,7 @@ PATTERNS = {
 }
 
 # Predefined reduction functions
-REDUCE_FNS = {"max": max, "min": min, "sum": sum, "last": lambda x: x[-1]}
+REDUCE_FNS = {"max": max, "min": min, "sum": sum, "mean": np.mean, "last": lambda x: x[-1]}
 
 
 def extract(lines: Iterable,
