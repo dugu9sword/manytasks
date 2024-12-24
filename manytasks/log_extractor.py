@@ -8,6 +8,16 @@ from tabulate import tabulate
 from manytasks.defs import TaskPool
 
 
+def auto_convert_str(s):
+    try:
+        return int(s)
+    except ValueError:
+        try:
+            return float(s)
+        except ValueError:
+            return s
+
+
 # Predefined filters
 def include_filter(key):
     def _check(line):
@@ -40,7 +50,7 @@ FILTERS = {
 PATTERNS = {
     "INT": r"([-]*\d+)",
     "FLOAT": r"([-]*\d+\.\d+)",
-    "BEFORE_COMMA": r"([^,]+),"
+    "ANY": r"(.*)",
 }
 
 # Predefined reduction functions
@@ -83,7 +93,7 @@ def extract(lines: Iterable,
             found = re.search(pattern, line)
             if found:
                 found_num += 1
-                line_result[k] = float(found.group(1))
+                line_result[k] = auto_convert_str(found.group(1))
             else:
                 break
         if found_num == len(patterns):
@@ -100,7 +110,7 @@ def extract(lines: Iterable,
 
 def show(opt, taskpool: TaskPool, regex_rule):
     table = []
-    header = ["idx", "cmd"]
+    header = ["idx", *regex_rule.keys(), "cmd"]
     for idx, task in enumerate(taskpool):
         task_log = "{}/task-{}.txt".format(opt.log_path, idx)
         if os.path.exists(task_log):
@@ -130,8 +140,7 @@ def show(opt, taskpool: TaskPool, regex_rule):
 
                 extracted[k] = result[k]
 
-            table.append([idx, task.to_finalized_cmd(), *extracted.values()])
-    header.extend(list(regex_rule.keys()))
+            table.append([idx, *extracted.values(), task.to_finalized_cmd()])
     result = tabulate(table, headers=header, floatfmt=".4f")
     print(result)
     f = open("{}/result.txt".format(opt.log_path), "w")
