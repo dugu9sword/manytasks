@@ -68,6 +68,8 @@ def parse_opt():
                             help="Specify the log path such as 'config_name.logs', where the suffix '.logs' can be omitted")
     show_mode.add_argument("--rule",     dest="rule_path",   action="store", default="",               
                             help="Specify the extraction rule such as 'rule.yaml', where the suffix '.yaml' can be omitted. ")
+    show_mode.add_argument("--no-cmd",   dest="no_cmd",      action="store_true",                      
+                            help="Do not print the `cmd` column. ")
     # yapf: enable
 
     opt = parser.parse_args()

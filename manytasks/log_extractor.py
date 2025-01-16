@@ -110,7 +110,10 @@ def extract(lines: Iterable,
 
 def show(opt, taskpool: TaskPool, regex_rule):
     table = []
-    header = ["idx", *regex_rule.keys(), "cmd"]
+    if opt.no_cmd:
+        header = ["idx", *regex_rule.keys()]
+    else:
+        header = ["idx", *regex_rule.keys(), "cmd"]
     for idx, task in enumerate(taskpool):
         task_log = "{}/task-{}.txt".format(opt.log_path, idx)
         if os.path.exists(task_log):
@@ -140,7 +143,10 @@ def show(opt, taskpool: TaskPool, regex_rule):
 
                 extracted[k] = result[k]
 
-            table.append([idx, *extracted.values(), task.to_finalized_cmd()])
+            if opt.no_cmd:
+                table.append([idx, *extracted.values()])
+            else:
+                table.append([idx, *extracted.values(), task.to_finalized_cmd()])
     result = tabulate(table, headers=header, floatfmt=".4f")
     print(result)
     f = open("{}/result.txt".format(opt.log_path), "w")
